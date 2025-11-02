@@ -7,7 +7,7 @@ import glob
 import os
 from datetime import datetime
 
-app = FastAPI(title="🌪️ API de Monitoreo de Tormentas Tropicales")
+app = FastAPI(title=" API de Monitoreo de Tormentas Tropicales")
 
 # --- CORS para frontend ---
 app.add_middleware(
@@ -94,12 +94,10 @@ def get_storms_by_date(date: str):
     if not json_dir.exists():
         raise HTTPException(status_code=404, detail="No se encontró la carpeta JSON para esta fecha.")
 
-    # Obtener todos los archivos JSON
     json_files = list(json_dir.glob("*.json"))
     if not json_files:
         raise HTTPException(status_code=404, detail="No se encontraron archivos JSON para esta fecha.")
 
-    # Cargar todos los JSON en un diccionario
     all_data = {}
     for json_file in json_files:
         try:
@@ -116,7 +114,7 @@ def get_storms_by_date(date: str):
     })
 
 @app.get("/api/date/{date}/storms/{storm_id}")
-def get_storms_by_date(date: str, storm_id: str):
+def get_storm_by_date_and_id(date: str, storm_id: str):
     """Devuelve el archivo JSON de una tormenta específica en una fecha específica."""
     target_dir = get_directory_by_date(date)
     if not target_dir:
@@ -126,16 +124,13 @@ def get_storms_by_date(date: str, storm_id: str):
     if not json_dir.exists():
         raise HTTPException(status_code=404, detail="No se encontró la carpeta JSON para esta fecha.")
 
-    # Buscar el archivo JSON de la tormenta específica
     json_path = json_dir / f"tormenta_{storm_id}.json"
     if not json_path.exists():
-        # Si no encuentra con el formato "tormenta_{storm_id}", buscar cualquier archivo que contenga el storm_id
         json_files = list(json_dir.glob(f"*{storm_id}*.json"))
         if not json_files:
             raise HTTPException(status_code=404, detail=f"No se encontró el archivo JSON de la tormenta {storm_id} para la fecha {date}.")
-        json_path = json_files[0]  # Tomar el primer archivo que coincida
+        json_path = json_files[0]
 
-    # Cargar y devolver el JSON específico
     with open(json_path, "r", encoding="utf-8") as f:
         data = json.load(f)
 
@@ -145,6 +140,7 @@ def get_storms_by_date(date: str, storm_id: str):
         "file": json_path.name,
         "data": data
     })
+
 # RUTAS MAPAS =========================
 
 @app.get("/api/maps")
@@ -164,7 +160,7 @@ def get_general_map():
 
 @app.get("/api/maps/{storm_id}")
 def get_storm_map(storm_id: str):
-    """Devuelve el mapa individual de una tormenta específica."""
+    """Devuelve el mapa individual de una tormenta específica mas reciente."""
     latest_dir = get_latest_directory()
     if not latest_dir:
         raise HTTPException(status_code=404, detail="No hay mapas generados aún.")
@@ -175,38 +171,52 @@ def get_storm_map(storm_id: str):
 
     return FileResponse(map_path, media_type="image/png")
 
-
-
-@app.get("/api/date/{date}/maps/general")
-def get_all_general_maps_by_date(date: str):
+# NUEVAS RUTAS PARA OBTENER METADATA DE IMÁGENES
+@app.get("/api/date/{date}/maps/general/list")
+def get_all_general_maps_metadata_by_date(date: str):
     """
-    Devuelve la ruta completa de todas las imágenes PNG (mapa_*.png)
-    dentro de cualquier carpeta que contenga la fecha indicada.
+    Devuelve una lista con índices de todas las imágenes PNG (mapa_*.png)
+    para poder accederlas individualmente.
     """
-    # Convertir la ruta base a string absoluta
     base_path = str(DATA_DIR.resolve())
-
-    # Buscar recursivamente todas las imágenes que coincidan con la fecha
     search_pattern = os.path.join(base_path, f"**/*{date}*/Mapas/mapa_*.png")
     image_paths = glob.glob(search_pattern, recursive=True)
 
     if not image_paths:
         raise HTTPException(status_code=404, detail=f"No se encontraron mapas para la fecha {date}.")
 
-    # Normalizar rutas
-    image_paths = [os.path.normpath(path) for path in image_paths]
+    image_paths = sorted([os.path.normpath(path) for path in image_paths])
+    
+    return {
+        "date": date,
+        "total_images": len(image_paths),
+        "images": [{"index": i, "filename": os.path.basename(path)} for i, path in enumerate(image_paths)]
+    }
 
-    return {"date": date, "map_images": image_paths}
-
-@app.get("/api/date/{date}/maps/{storm_id}")
-def get_storm_map_by_date(date: str, storm_id: str):
+@app.get("/api/date/{date}/maps/general/{index}")
+def get_general_map_by_date_and_index(date: str, index: int):
     """
-    Devuelve una lista con las rutas completas de todas las imágenes PNG
-    del storm_id indicado dentro de las carpetas que contengan la fecha.
+    Devuelve la imagen PNG del mapa general en la posición 'index' para la fecha dada.
     """
     base_path = str(DATA_DIR.resolve())
+    search_pattern = os.path.join(base_path, f"**/*{date}*/Mapas/mapa_*.png")
+    image_paths = sorted(glob.glob(search_pattern, recursive=True))
 
-    # Buscar todas las imágenes que coincidan con la fecha y el storm_id
+    if not image_paths:
+        raise HTTPException(status_code=404, detail=f"No se encontraron mapas para la fecha {date}.")
+
+    if index < 0 or index >= len(image_paths):
+        raise HTTPException(status_code=404, detail=f"Índice {index} fuera de rango. Total de imágenes: {len(image_paths)}")
+
+    return FileResponse(image_paths[index], media_type="image/png")
+
+@app.get("/api/date/{date}/maps/{storm_id}/list")
+def get_storm_maps_metadata_by_date(date: str, storm_id: str):
+    """
+    Devuelve una lista con índices de todas las imágenes PNG del storm_id
+    para poder accederlas individualmente.
+    """
+    base_path = str(DATA_DIR.resolve())
     search_pattern = os.path.join(base_path, f"**/*{date}*/Mapas/*{storm_id}*.png")
     map_files = glob.glob(search_pattern, recursive=True)
 
@@ -216,14 +226,37 @@ def get_storm_map_by_date(date: str, storm_id: str):
             detail=f"No se encontraron mapas del storm_id '{storm_id}' para la fecha {date}."
         )
 
-    # Normalizar rutas
-    map_files = [os.path.normpath(path) for path in map_files]
+    map_files = sorted([os.path.normpath(path) for path in map_files])
 
     return {
         "date": date,
         "storm_id": storm_id,
-        "map_images": map_files
+        "total_images": len(map_files),
+        "images": [{"index": i, "filename": os.path.basename(path)} for i, path in enumerate(map_files)]
     }
+
+@app.get("/api/date/{date}/maps/{storm_id}/{index}")
+def get_storm_map_by_date_and_index(date: str, storm_id: str, index: int):
+    """
+    Devuelve la imagen PNG del storm_id en la posición 'index' para la fecha dada.
+    """
+    base_path = str(DATA_DIR.resolve())
+    search_pattern = os.path.join(base_path, f"**/*{date}*/Mapas/*{storm_id}*.png")
+    map_files = sorted(glob.glob(search_pattern, recursive=True))
+
+    if not map_files:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No se encontraron mapas del storm_id '{storm_id}' para la fecha {date}."
+        )
+
+    if index < 0 or index >= len(map_files):
+        raise HTTPException(
+            status_code=404, 
+            detail=f"Índice {index} fuera de rango. Total de imágenes: {len(map_files)}"
+        )
+
+    return FileResponse(map_files[index], media_type="image/png")
 
 if __name__ == "__main__":
     import uvicorn
