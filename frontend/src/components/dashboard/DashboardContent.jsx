@@ -200,6 +200,102 @@ function GeneralMapCarousel({ latestDate }) {
 }
 
 // ============================================
+// Componente para mostrar la ÚLTIMA imagen general
+// ============================================
+function LatestGeneralImage({ latestDate }) {
+  const [imageUrl, setImageUrl] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [imageLoading, setImageLoading] = useState(true)
+
+  useEffect(() => {
+    if (!latestDate) return
+
+    const loadLatest = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+
+        const listResponse = await fetch(`${API_BASE_URL}/api/date/${latestDate}/maps/general/list`)
+        if (!listResponse.ok) throw new Error('No se pudieron cargar las imágenes generales')
+
+        const listData = await listResponse.json()
+        if (!listData.images || listData.images.length === 0) {
+          setError('No hay imágenes generales disponibles')
+          setImageUrl(null)
+          return
+        }
+
+        // Seleccionar la imagen con el índice más alto (última)
+        const latestImage = listData.images.reduce((a, b) => {
+          const ai = Number(a.index)
+          const bi = Number(b.index)
+          return ai >= bi ? a : b
+        })
+
+        const url = `${API_BASE_URL}/api/date/${latestDate}/maps/general/${latestImage.index}?v=${latestDate}`
+        setImageUrl(url)
+      } catch (err) {
+        console.error('Error cargando la última imagen general:', err)
+        setError(err.message || 'Error cargando la imagen')
+      } finally {
+        setLoading(false)
+        setImageLoading(true)
+      }
+    }
+
+    loadLatest()
+  }, [latestDate])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader className="w-12 h-12 text-cyan-400 animate-spin" />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-2" />
+        <p className="text-red-400">{error}</p>
+      </div>
+    )
+  }
+
+  if (!imageUrl) {
+    return (
+      <div className="text-center py-8">
+        <MapPin className="w-12 h-12 text-slate-500 mx-auto mb-2 opacity-30" />
+        <p className="text-[#B2D8D8]">No hay imagen disponible</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="relative bg-[#013f4e] rounded-lg overflow-hidden min-h-[400px] flex items-center justify-center">
+      {imageLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-[#013f4e] z-10">
+          <Loader className="w-8 h-8 text-cyan-400 animate-spin" />
+        </div>
+      )}
+
+      <img
+        src={imageUrl}
+        alt={`Mapa General - Última`}
+        className="w-full h-auto max-h-[600px] object-contain"
+        onLoad={() => setImageLoading(false)}
+        onError={(e) => {
+          console.error('Error cargando la última imagen general:', imageUrl)
+          setImageLoading(false)
+        }}
+      />
+    </div>
+  )
+}
+
+// ============================================
 // Componente para cargar imágenes de tormenta específica
 // ============================================
 function StormMapCarousel({ stormId, latestDate }) {
@@ -300,11 +396,14 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
 
   if (!latestDate) {
     return (
-      <section className="flex-1 overflow-y-auto p-6 md:p-8 bg-[#013f4e] flex items-center justify-center">
-        <div className="text-center bg-[#024b58]/80 p-12 rounded-[14px] border border-white/10">
-          <MapPin className="w-16 h-16 text-slate-500 mx-auto mb-4 opacity-30" />
-          <h3 className="text-xl font-bold text-[#EAF6F6] mb-2">Selecciona una fecha</h3>
-          <p className="text-[#B2D8D8]">Usa el calendario en la barra lateral para cargar los datos de tormentas de un día específico.</p>
+      <section className="flex-1 overflow-y-auto p-6 md:p-8 bg-[#013f4e]">
+        <div className="mb-6">
+          <h1 className="text-3xl md:text-4xl font-bold text-[#EAF6F6] mb-2 drop-shadow-lg">Vista General de Tormentas</h1>
+          <p className="text-[#B2D8D8] text-sm">Ultimo mapa general disponible</p>
+        </div>
+
+        <div className="bg-[#024b58]/80 backdrop-blur-xl rounded-[14px] border border-white/10 overflow-hidden p-4">
+          <LatestAvailableGeneral />
         </div>
       </section>
     )
@@ -433,8 +532,8 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
             <div className="p-4">
               {
                 !mainStormView ? (
-                  // (Vista General)
-                  <GeneralMapCarousel latestDate={latestDate} />
+                  // (Vista General) - al cargar la página mostramos la última imagen general
+                  <LatestGeneralImage latestDate={latestDate} />
                 ) 
                 
                 : mainStormView.invest ? (
@@ -461,5 +560,89 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
         </>
       )}
     </section>
+  )
+}
+
+// ============================================
+// Componente para mostrar el último mapa general
+// cuando NO hay `latestDate` seleccionado
+// ============================================
+function LatestAvailableGeneral() {
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [imageLoading, setImageLoading] = useState(true)
+  const [imageUrl, setImageUrl] = useState(null)
+
+  useEffect(() => {
+    let isMounted = true
+    const checkLatest = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+
+        const resp = await fetch(`${API_BASE_URL}/api/maps`, { cache: 'no-store' })
+        if (!resp.ok) {
+          throw new Error('No se encontró el mapa general más reciente')
+        }
+
+        // Usamos la misma ruta para el <img>, añadimos un query param para evitar cache
+        if (isMounted) setImageUrl(`${API_BASE_URL}/api/maps?v=${Date.now()}`)
+      } catch (err) {
+        console.error('Error obteniendo el último mapa general:', err)
+        if (isMounted) setError(err.message || 'Error al obtener el mapa')
+      } finally {
+        if (isMounted) setLoading(false)
+      }
+    }
+
+    checkLatest()
+    return () => { isMounted = false }
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader className="w-12 h-12 text-cyan-400 animate-spin" />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-2" />
+        <p className="text-red-400">{error}</p>
+      </div>
+    )
+  }
+
+  if (!imageUrl) {
+    return (
+      <div className="text-center py-8">
+        <MapPin className="w-12 h-12 text-slate-500 mx-auto mb-2 opacity-30" />
+        <p className="text-[#B2D8D8]">No hay mapa disponible</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="relative bg-[#013f4e] rounded-lg overflow-hidden min-h-[400px] flex items-center justify-center">
+      {imageLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-[#013f4e] z-10">
+          <Loader className="w-8 h-8 text-cyan-400 animate-spin" />
+        </div>
+      )}
+
+      <img
+        src={imageUrl}
+        alt="Mapa General - Último"
+        className="w-full h-auto max-h-[600px] object-contain"
+        onLoad={() => setImageLoading(false)}
+        onError={(e) => {
+          console.error('Error cargando el último mapa general', e)
+          setImageLoading(false)
+        }}
+      />
+    </div>
   )
 }
