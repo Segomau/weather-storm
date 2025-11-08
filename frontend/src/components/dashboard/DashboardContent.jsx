@@ -46,11 +46,11 @@ function ImageCarousel({ images, title }) {
         
         <img 
           src={images[currentIndex]}
-          alt={${title} - Imagen ${currentIndex + 1}}
+          alt={`${title} - Imagen ${currentIndex + 1}`}
           className="w-full h-auto max-h-[600px] object-contain"
           onLoad={() => setImageLoading(false)}
           onError={(e) => {
-            console.error(Error cargando imagen ${currentIndex}:, images[currentIndex])
+            console.error(`Error cargando imagen ${currentIndex}:`, images[currentIndex])
             setImageLoading(false)
           }}
         />
@@ -102,7 +102,7 @@ function ImageCarousel({ images, title }) {
             >
               <img 
                 src={img} 
-                alt={Miniatura ${idx + 1}}
+                alt={`Miniatura ${idx + 1}`}
                 className="w-full h-full object-cover"
                 loading="lazy" 
               />
@@ -126,7 +126,7 @@ function ImageCarousel({ images, title }) {
                   ? "bg-cyan-400 scale-125" 
                   : "bg-white/30 hover:bg-white/60"
               }`}
-              aria-label={Ir a imagen ${idx + 1}}
+              aria-label={`Ir a imagen ${idx + 1}`}
             />
           ))}
         </div>
@@ -151,9 +151,9 @@ function GeneralMapCarousel({ latestDate }) {
         setLoading(true)
         setError(null)
         
-        console.log(Cargando mapas generales para fecha: ${latestDate})
+        console.log(`Cargando mapas generales para fecha: ${latestDate}`)
         
-        const listResponse = await fetch(${API_BASE_URL}/api/date/${latestDate}/maps/general/list)
+        const listResponse = await fetch(`${API_BASE_URL}/api/date/${latestDate}/maps/general/list`)
         
         if (!listResponse.ok) {
           throw new Error('No se pudieron cargar las imágenes generales')
@@ -163,10 +163,10 @@ function GeneralMapCarousel({ latestDate }) {
         console.log("Lista de mapas generales:", listData)
         
         const imageUrls = listData.images.map(img => 
-          ${API_BASE_URL}/api/date/${latestDate}/maps/general/${img.index}?v=${latestDate}
+          `${API_BASE_URL}/api/date/${latestDate}/maps/general/${img.index}?v=${latestDate}`
         )
         
-        console.log(${imageUrls.length} imágenes generales cargadas)
+        console.log(`${imageUrls.length} imágenes generales cargadas`)
         setImages(imageUrls)
         
       } catch (err) {
@@ -217,7 +217,7 @@ function LatestGeneralImage({ latestDate }) {
         setLoading(true)
         setError(null)
 
-        const listResponse = await fetch(${API_BASE_URL}/api/date/${latestDate}/maps/general/list)
+        const listResponse = await fetch(`${API_BASE_URL}/api/date/${latestDate}/maps/general/list`)
         if (!listResponse.ok) throw new Error('No se pudieron cargar las imágenes generales')
 
         const listData = await listResponse.json()
@@ -234,7 +234,7 @@ function LatestGeneralImage({ latestDate }) {
           return ai >= bi ? a : b
         })
 
-        const url = ${API_BASE_URL}/api/date/${latestDate}/maps/general/${latestImage.index}?v=${latestDate}
+        const url = `${API_BASE_URL}/api/date/${latestDate}/maps/general/${latestImage.index}?v=${latestDate}`
         setImageUrl(url)
       } catch (err) {
         console.error('Error cargando la última imagen general:', err)
@@ -284,7 +284,7 @@ function LatestGeneralImage({ latestDate }) {
 
       <img
         src={imageUrl}
-        alt={Mapa General - Última}
+        alt={`Mapa General - Última`}
         className="w-full h-auto max-h-[600px] object-contain"
         onLoad={() => setImageLoading(false)}
         onError={(e) => {
@@ -312,26 +312,26 @@ function StormMapCarousel({ stormId, latestDate }) {
         setLoading(true)
         setError(null)
         
-        console.log(Cargando mapas para tormenta: ${stormId}, fecha: ${latestDate})
+        console.log(`Cargando mapas para tormenta: ${stormId}, fecha: ${latestDate}`)
         
-        const listResponse = await fetch(${API_BASE_URL}/api/date/${latestDate}/maps/${stormId}/list)
+        const listResponse = await fetch(`${API_BASE_URL}/api/date/${latestDate}/maps/${stormId}/list`)
         
         if (!listResponse.ok) {
-          throw new Error(No se pudieron cargar las imágenes de ${stormId})
+          throw new Error(`No se pudieron cargar las imágenes de ${stormId}`)
         }
         
         const listData = await listResponse.json()
-        console.log(Lista de mapas para ${stormId}:, listData)
+        console.log(`Lista de mapas para ${stormId}:, listData`)
         
         const imageUrls = listData.images.map(img => 
-          ${API_BASE_URL}/api/date/${latestDate}/maps/${stormId}/${img.index}?v=${latestDate}
+          `${API_BASE_URL}/api/date/${latestDate}/maps/${stormId}/${img.index}?v=${latestDate}`
         )
         
-        console.log(${imageUrls.length} imágenes de ${stormId} cargadas)
+        console.log(`${imageUrls.length} imágenes de ${stormId} cargadas`)
         setImages(imageUrls)
         
       } catch (err) {
-        console.error(Error cargando mapas de ${stormId}:, err)
+        console.error(`Error cargando mapas de ${stormId}:, err`)
         setError(err.message)
       } finally {
         setLoading(false)
@@ -358,7 +358,7 @@ function StormMapCarousel({ stormId, latestDate }) {
     )
   }
 
-  return <ImageCarousel images={images} title={Tormenta ${stormId}} />
+  return <ImageCarousel images={images} title={`Tormenta ${stormId}`} />
 }
 
 
@@ -422,7 +422,7 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
         </h1>
         <p className="text-[#B2D8D8] text-sm">
           {mainStormView 
-            ? ${mainStormView.ubicacion || mainStormView.location || 'Sin ubicación'}
+            ? `${mainStormView.ubicacion || mainStormView.location || 'Sin ubicación'}`
             : "Monitoreo en tiempo real de tormentas tropicales"}
         </p>
         {latestDate && (
@@ -479,7 +479,7 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
                       : "border-white/10 hover:border-cyan-400/30 shadow-lg hover:shadow-cyan-400/15"
                   }`}
                 >
-                  <div className={h-1 ${dangerColor}} />
+                  <div className={h-1 `${dangerColor}`} />
                   <div className="relative aspect-[4/3] flex items-center justify-center bg-[#013f4e]">
                     {storm.imageUrl ? (
                       <img 
@@ -499,7 +499,7 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
                   </div>
                   <div className="p-3">
                     <h3 className="text-sm font-bold text-[#EAF6F6] group-hover:text-cyan-300 transition-colors">
-                      {storm.nombre || storm.name || Tormenta ${storm.id}}
+                      {storm.nombre || storm.name || Tormenta `${storm.id}`}
                     </h3>
                     <p className="text-xs text-[#B2D8D8] mt-1">
                       Categoría {category}
@@ -520,15 +520,15 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
                   !mainStormView 
                     ? "Mapas Generales de Tormentas"
                   : mainStormView.invest 
-                    ? Área de Investigación: ${mainStormView.nombre || mainStormView.name}
-                    : Mapas de ${mainStormView.nombre || mainStormView.name}
+                    ? `Área de Investigación: ${mainStormView.nombre || mainStormView.name}`
+                    : `Mapas de ${mainStormView.nombre || mainStormView.name}`
                 }
               </h2>
 
               <p className="text-sm text-[#B2D8D8] mt-1">
                 {mainStormView 
-                  ? ID: ${mainStormView.id} 
-                  : Todas las actualizaciones del ${latestDate || 'día seleccionado'}}
+                  ? `ID: ${mainStormView.id}` 
+                  : `Todas las actualizaciones del ${latestDate || 'día seleccionado'}`}
               </p>
             </div>
 
@@ -583,13 +583,13 @@ function LatestAvailableGeneral() {
         setLoading(true)
         setError(null)
 
-        const resp = await fetch(${API_BASE_URL}/api/maps, { cache: 'no-store' })
+        const resp = await fetch(`${API_BASE_URL}/api/maps, { cache: 'no-store' }`)
         if (!resp.ok) {
           throw new Error('No se encontró el mapa general más reciente')
         }
 
         // Usamos la misma ruta para el <img>, añadimos un query param para evitar cache
-        if (isMounted) setImageUrl(${API_BASE_URL}/api/maps?v=${Date.now()})
+        if (isMounted) setImageUrl(`${API_BASE_URL}/api/maps?v=${Date.now()}`)
       } catch (err) {
         console.error('Error obteniendo el último mapa general:', err)
         if (isMounted) setError(err.message || 'Error al obtener el mapa')
