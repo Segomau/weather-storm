@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { MapPin, Wind, ChevronLeft, ChevronRight } from "lucide-react"
+import { MapPin, Wind, ChevronLeft, ChevronRight, MapIcon } from "lucide-react"
 
 function Stat({ label, value }) {
   return (
@@ -119,12 +119,12 @@ export default function DashboardSidebar({ view, setView, mainStormView, activeS
               : "bg-[#024b58] text-slate-200 border-white/10"
           }`}
         >
-          <MapPin className="w-4 h-4 inline mr-1" /> Mapa
+          <MapIcon className="w-4 h-4 inline mr-1" /> Mapa
         </button>
         <button
-          onClick={() => setView("dashboard")}
+          onClick={() => setView("storms")}
           className={`flex-1 p-2 rounded-xl border ${
-            view === "dashboard"
+            view === "storms"
               ? "bg-gradient-to-br from-cyan-500 to-teal-600 text-white border-cyan-300"
               : "bg-[#024b58] text-slate-200 border-white/10"
           }`}

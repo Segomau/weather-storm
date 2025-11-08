@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react"
-import { MapPin, Wind, AlertTriangle, Loader, ChevronLeft, ChevronRight } from "lucide-react"
+import { MapPin, Wind, AlertTriangle, Loader, ChevronLeft, ChevronRight, Tornado } from "lucide-react"
 
 const API_BASE_URL = "http://localhost:8000"
 
@@ -361,8 +361,32 @@ function StormMapCarousel({ stormId, latestDate }) {
   return <ImageCarousel images={images} title={`Tormenta ${stormId}`} />
 }
 
+function InfoPopup({ isOpen, onClose, title, children }) {
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+      <div className="bg-[#024b58] text-[#EAF6F6] rounded-xl p-6 w-[90%] max-w-lg shadow-xl relative">
+        <h2 className="text-xl font-bold mb-3">{title}</h2>
+        <pre className="text-xs bg-black/30 p-3 rounded-lg overflow-auto max-h-[60vh] text-[#B2D8D8] whitespace-pre-wrap">
+          {children}
+        </pre>
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 text-cyan-300 hover:text-cyan-100"
+        >
+          ✖
+        </button>
+      </div>
+    </div>
+  )
+}
+
 
 export default function DashboardContent({ mainStormView, setMainStormView, activeStorms, loading, error, latestDate }) {
+  const [showInfo, setShowInfo] = useState(false)
+  const [selectedJSON, setSelectedJSON] = useState(null)  
+  
   const getDangerLevelColor = (category) => {
     if (category >= 4) return "bg-red-500"
     if (category >= 2) return "bg-yellow-500"
@@ -455,12 +479,22 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
             >
               <div className="h-1 bg-gradient-to-r from-green-500/50 to-emerald-500/50" />
               <div className="relative aspect-[4/3] flex items-center justify-center">
-                <MapPin className="w-12 h-12 text-cyan-400 opacity-50" />
+                <Tornado className="w-12 h-12 text-cyan-400 opacity-50" />
               </div>
               <div className="p-3">
                 <h3 className="text-sm font-bold text-[#EAF6F6] group-hover:text-cyan-300 transition-colors">
                   Vista General
                 </h3>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setSelectedJSON({type: 'general', latestDate })
+                    setShowInfo(true)
+                  }}
+                  className="mt-2 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 px-2 py-1 rounded-lg text-xs transition-all"
+                  >
+                    JSON
+                  </button>
               </div>
             </button>
 
@@ -479,7 +513,7 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
                       : "border-white/10 hover:border-cyan-400/30 shadow-lg hover:shadow-cyan-400/15"
                   }`}
                 >
-                  <div className={h-1 `${dangerColor}`} />
+                  <div className={`h-1 ${dangerColor}`} />
                   <div className="relative aspect-[4/3] flex items-center justify-center bg-[#013f4e]">
                     {storm.imageUrl ? (
                       <img 
@@ -499,11 +533,21 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
                   </div>
                   <div className="p-3">
                     <h3 className="text-sm font-bold text-[#EAF6F6] group-hover:text-cyan-300 transition-colors">
-                      {storm.nombre || storm.name || Tormenta `${storm.id}`}
+                      {storm.nombre || storm.name || `Tormenta ${storm.id}`}
                     </h3>
                     <p className="text-xs text-[#B2D8D8] mt-1">
                       Categoría {category}
                     </p>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setSelectedJSON(storm)
+                        setShowInfo(true)
+                      }}
+                      className="mt-2 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 px-2 py-1 rounded-lg text-xs transition-all"
+                    >
+                      JSON
+                    </button>
                   </div>
                 </button>
               )
@@ -562,6 +606,15 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
           </div>
         </>
       )}
+      <InfoPopup
+      isOpen={showInfo}
+      onClose={() => setShowInfo(false)}
+      title="Datos JSON"
+    >
+      {selectedJSON
+      ? JSON.stringify(selectedJSON, null, 2)
+      : "No hay datos disponibles."}
+      </InfoPopup>
     </section>
   )
 }
@@ -583,7 +636,7 @@ function LatestAvailableGeneral() {
         setLoading(true)
         setError(null)
 
-        const resp = await fetch(`${API_BASE_URL}/api/maps, { cache: 'no-store' }`)
+        const resp = await fetch(`${API_BASE_URL}/api/maps`, { cache: 'no-store' })
         if (!resp.ok) {
           throw new Error('No se encontró el mapa general más reciente')
         }

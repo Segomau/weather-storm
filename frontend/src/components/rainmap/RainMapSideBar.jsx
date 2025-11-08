@@ -18,7 +18,7 @@ export default function RainmapSidebar({
 }) {
   // 🌎 Lista de ciudades incluida (copiada / adaptada de tu Notion)
   const MEXICAN_CITIES = [
-    { name: "Mexico City", lat: 19.4326, lng: -99.1332, state: "CDMX" },
+    { name: "Ciudad de Mexico", lat: 19.4326, lng: -99.1332, state: "CDMX" },
     { name: "Guadalajara", lat: 20.6597, lng: -103.3496, state: "Jalisco" },
     { name: "Monterrey", lat: 25.6866, lng: -100.3161, state: "Nuevo León" },
     { name: "Puebla", lat: 19.0414, lng: -98.2063, state: "Puebla" },
@@ -126,7 +126,7 @@ export default function RainmapSidebar({
               : "bg-[#024b58] text-slate-200 border-white/10"
           }`}
         >
-          <MapIcon className="w-4 h-4 inline mr-1" /> Map
+          <MapIcon className="w-4 h-4 inline mr-1" /> Mapa
         </button>
         <button
           onClick={() => setView("storms")}
@@ -136,7 +136,7 @@ export default function RainmapSidebar({
               : "bg-[#024b58] text-slate-200 border-white/10"
           }`}
         >
-          <Wind className="w-4 h-4 inline mr-1" /> Storms
+          <Wind className="w-4 h-4 inline mr-1" /> Tormentas
         </button>
       </div>
 

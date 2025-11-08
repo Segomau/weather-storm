@@ -117,7 +117,7 @@ function App() {
   }
 
   return (
-    <div className="flex h-screen bg-[#013f4e] text-white">
+    <div className="flex min-h-screen bg-[#013f4e] text-white overflow-hidden">
       <div className="w-80 border-r border-white/10">
         {view === "map" ? (
           <RainmapSidebar
