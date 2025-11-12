@@ -1,13 +1,6 @@
 import React, { useEffect, useRef, useState } from "react"
 import { Search, Map as MapIcon, Wind } from "lucide-react"
 
-/**
- * RainmapSidebar
- * Props:
- * - view, setView (string / fn) => controla vista activa
- * - selectedCity, setSelectedCity
- * - weatherData, setWeatherData
- */
 export default function RainmapSidebar({
   view,
   setView,
@@ -16,7 +9,6 @@ export default function RainmapSidebar({
   weatherData,
   setWeatherData,
 }) {
-  // 🌎 Lista de ciudades incluida (copiada / adaptada de tu Notion)
   const MEXICAN_CITIES = [
     { name: "Ciudad de Mexico", lat: 19.4326, lng: -99.1332, state: "CDMX" },
     { name: "Guadalajara", lat: 20.6597, lng: -103.3496, state: "Jalisco" },
@@ -120,21 +112,19 @@ export default function RainmapSidebar({
       <div className="sticky top-0 p-3 border-b border-white/10 flex gap-2 backdrop-blur-xl bg-[#024b58]/70 z-10">
         <button
           onClick={() => setView("map")}
-          className={`flex-1 p-2 rounded-xl border ${
-            view === "map"
+          className={`flex-1 p-2 rounded-xl border ${view === "map"
               ? "bg-gradient-to-br from-cyan-500 to-teal-600 text-white border-cyan-300"
               : "bg-[#024b58] text-slate-200 border-white/10"
-          }`}
+            }`}
         >
           <MapIcon className="w-4 h-4 inline mr-1" /> Mapa
         </button>
         <button
           onClick={() => setView("storms")}
-          className={`flex-1 p-2 rounded-xl border ${
-            view === "storms"
+          className={`flex-1 p-2 rounded-xl border ${view === "storms"
               ? "bg-gradient-to-br from-cyan-500 to-teal-600 text-white border-cyan-300"
               : "bg-[#024b58] text-slate-200 border-white/10"
-          }`}
+            }`}
         >
           <Wind className="w-4 h-4 inline mr-1" /> Tormentas
         </button>
@@ -151,8 +141,8 @@ export default function RainmapSidebar({
                 {weatherData.condition === "rain"
                   ? "🌧️"
                   : weatherData.condition === "cloudy"
-                  ? "☁️"
-                  : "☀️"}
+                    ? "☁️"
+                    : "☀️"}
               </div>
               <p className="text-[#EAF6F6] mt-2 text-lg font-bold">
                 {weatherData.temperature.toFixed(1)}°C

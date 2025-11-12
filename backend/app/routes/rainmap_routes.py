@@ -1,147 +1,104 @@
-from fastapi import APIRouter
-import requests
-from datetime import datetime, timezone
-from typing import List, Dict
+from fastapi import APIRouter, HTTPException
+from fastapi.responses import JSONResponse
+import numpy as np, requests, concurrent.futures, time
 
 router = APIRouter()
 
-# Weather condition mapping
-WEATHER_ICONS = {
-    "clear": "☀️",
-    "partly_cloudy": "⛅",
-    "cloudy": "☁️",
-    "rain": "🌧️",
-    "thunderstorm": "⛈️",
-    "snow": "❄️",
-    "fog": "🌫️",
-    "unknown": "❓",
-}
+
+# --- 1. Generate grid points ---
+def generate_grid(grid_size=15):
+    min_lon, max_lon, min_lat, max_lat = -118, -86.5, 14.5, 32.75
+    lon = np.linspace(min_lon, max_lon, grid_size)
+    lat = np.linspace(min_lat, max_lat, grid_size)
+    return [{"lat": float(a), "lon": float(b)} for a in lat for b in lon]
 
 
-def generate_grid_points(grid_size: int = 15) -> List[Dict[str, float]]:
-    """Generate grid points within Mexico bounds"""
-    mexico_bounds = [
-        [-118, 14.5],  # SW [minLon, minLat]
-        [-86.5, 32.75],  # NE [maxLon, maxLat]
+# --- 2. Fetch single weather point ---
+def fetch_point(p):
+    try:
+        r = requests.get(
+            "https://api.open-meteo.com/v1/forecast",
+            params={"latitude": p["lat"], "longitude": p["lon"], "current": "rain"},
+            timeout=15,
+        )
+        r.raise_for_status()
+        d = r.json().get("current", {})
+        return {"lat": p["lat"], "lon": p["lon"], "rain": d.get("rain", 0)}
+    except Exception:
+        time.sleep(1)
+        return {"lat": p["lat"], "lon": p["lon"], "rain": 0}
+
+
+# --- 3. Parallel fetch all data ---
+def get_weather(grid_size=15):
+    pts = generate_grid(grid_size)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as ex:
+        data = list(ex.map(fetch_point, pts))
+    return data
+
+
+# --- 4. Haversine distance ---
+def haversine(lat1, lon1, lats2, lons2):
+    lat1, lon1, lats2, lons2 = map(np.radians, [lat1, lon1, lats2, lons2])
+    a = (
+        np.sin((lats2 - lat1) / 2) ** 2
+        + np.cos(lat1) * np.cos(lats2) * np.sin((lons2 - lon1) / 2) ** 2
+    )
+    return 6371 * 2 * np.arcsin(np.sqrt(a))
+
+
+# --- 5. IDW interpolation ---
+def idw(lat, lon, known_lats, known_lons, known_vals, power=2):
+    d = haversine(lat, lon, known_lats, known_lons)
+    d[d == 0] = 1e-6
+    w = 1 / d**power
+    return np.sum(w * known_vals) / np.sum(w)
+
+
+# --- 6. Interpolate grid ---
+def interpolate(data, density=100):
+    lats = np.array([p["lat"] for p in data])
+    lons = np.array([p["lon"] for p in data])
+    vals = np.array([p["rain"] for p in data])
+    latg = np.linspace(lats.min(), lats.max(), density)
+    long = np.linspace(lons.min(), lons.max(), density)
+    lat_grid, lon_grid = np.meshgrid(latg, long)
+    interp_vals = np.zeros_like(lat_grid)
+    for i in range(lat_grid.shape[0]):
+        for j in range(lat_grid.shape[1]):
+            interp_vals[i, j] = idw(lat_grid[i, j], lon_grid[i, j], lats, lons, vals)
+    return [
+        {
+            "lat": float(lat_grid[i, j]),
+            "lon": float(lon_grid[i, j]),
+            "rain": float(interp_vals[i, j]),
+        }
+        for i in range(lat_grid.shape[0])
+        for j in range(lat_grid.shape[1])
     ]
 
-    points = []
 
-    min_lon = mexico_bounds[0][0]
-    max_lon = mexico_bounds[1][0]
-    min_lat = mexico_bounds[0][1]
-    max_lat = mexico_bounds[1][1]
-
-    lon_step = (max_lon - min_lon) / (grid_size - 1)
-    lat_step = (max_lat - min_lat) / (grid_size - 1)
-
-    for row in range(grid_size):
-        for col in range(grid_size):
-            longitude = min_lon + (col * lon_step)
-            latitude = min_lat + (row * lat_step)
-
-            points.append(
-                {
-                    "name": f"Grid_{row}_{col}",
-                    "lat": round(latitude, 4),
-                    "lon": round(longitude, 4),
-                }
-            )
-
-    return points
+# --- 7. Real-time generator ---
+def generate_real_time_json(grid_size=15, density=100):
+    data = get_weather(grid_size)
+    interp = interpolate(data, density)
+    return {
+        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        "original_points": len(data),
+        "interpolated_points": len(interp),
+        "data": interp,
+    }
 
 
-def get_weather_status(rain: float, cloud_cover: float) -> str:
-    """Determine weather status based on rain and cloud cover"""
-    if rain > 5:
-        return "Heavy rain"
-    elif rain > 1:
-        return "Light rain"
-    elif rain > 0:
-        return "Drizzle"
-    elif cloud_cover > 70:
-        return "Cloudy"
-    elif cloud_cover > 30:
-        return "Partly cloudy"
-    else:
-        return "Clear"
-
-
-def get_weather_icon(status: str) -> str:
-    """Get weather icon based on status"""
-    if "rain" in status.lower():
-        return WEATHER_ICONS["rain"]
-    elif "thunder" in status.lower():
-        return WEATHER_ICONS["thunderstorm"]
-    elif "cloud" in status.lower():
-        return WEATHER_ICONS["cloudy"]
-    elif "clear" in status.lower():
-        return WEATHER_ICONS["clear"]
-    elif "drizzle" in status.lower():
-        return WEATHER_ICONS["rain"]
-    else:
-        return WEATHER_ICONS["unknown"]
-
-
-@router.get("/")
-def get_prediction(grid_size: int = 15):
-    """Get current weather for grid points across Mexico"""
-    grid_points = generate_grid_points(grid_size)
-    grid_data = []
-    current_time = datetime.now(timezone.utc)
-
+# --- 8. FastAPI route ---
+@router.get("/realtime")
+async def get_real_time_rainmap(grid_size: int = 15, density: int = 50):
+    """
+    Returns real-time interpolated rain data as JSON.
+    Example: GET /rainmap/realtime?grid_size=10&density=40
+    """
     try:
-        for point in grid_points:
-            url = "https://api.open-meteo.com/v1/forecast"
-            params = {
-                "latitude": point["lat"],
-                "longitude": point["lon"],
-                "hourly": "temperature_2m,rain,cloud_cover",
-                "timezone": "auto",
-                "forecast_days": 1,
-            }
-
-            response = requests.get(url, params=params, timeout=59)
-            response.raise_for_status()
-            data = response.json()
-
-            hourly = data.get("hourly", {})
-
-            if not hourly or not hourly.get("time"):
-                continue
-
-            current_hour_index = 0
-
-            temperature = hourly.get("temperature_2m", [0])[current_hour_index]
-            rain = hourly.get("rain", [0])[current_hour_index]
-            cloud_cover = hourly.get("cloud_cover", [0])[current_hour_index]
-
-            status = get_weather_status(rain, cloud_cover)
-            icon = get_weather_icon(status)
-
-            grid_data.append(
-                {
-                    "id": point["name"],
-                    "latitude": point["lat"],
-                    "longitude": point["lon"],
-                    "temperature": float(temperature),
-                    "rain": float(rain),
-                    "cloud_cover": float(cloud_cover),
-                    "status": status,
-                    "icon": icon,
-                    "display_text": f"{icon} {point['name']}: {temperature}°C - {status}",
-                    "last_updated": current_time.isoformat(),
-                }
-            )
-
-        return {
-            "grid_size": grid_size,
-            "total_points": len(grid_points),
-            "bounds": {"southwest": [-118, 14.5], "northeast": [-86.5, 32.75]},
-            "data": grid_data,
-        }
-
-    except requests.exceptions.RequestException as e:
-        return {"error": f"Weather API request failed: {str(e)}"}
+        result = generate_real_time_json(grid_size, density)
+        return JSONResponse(content=result)
     except Exception as e:
-        return {"error": f"Unexpected error: {str(e)}"}
+        raise HTTPException(status_code=500, detail=str(e))

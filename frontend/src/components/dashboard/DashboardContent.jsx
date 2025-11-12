@@ -3,15 +3,12 @@ import { MapPin, Wind, AlertTriangle, Loader, ChevronLeft, ChevronRight, Tornado
 
 const API_BASE_URL = "http://localhost:8000"
 
-// ============================================
-//  mostrar JSON
-// ============================================
 function InfoPopup({ isOpen, onClose, title, children }) {
   if (!isOpen) return null
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50" onClick={onClose}>
-      <div 
+      <div
         className="bg-[#024b58] text-[#EAF6F6] rounded-xl p-6 w-[90%] max-w-lg shadow-xl relative"
         onClick={(e) => e.stopPropagation()}
       >
@@ -68,8 +65,8 @@ function ImageCarousel({ images, title }) {
             <Loader className="w-8 h-8 text-cyan-400 animate-spin" />
           </div>
         )}
-        
-        <img 
+
+        <img
           src={images[currentIndex]}
           alt={`${title} - Imagen ${currentIndex + 1}`}
           className="w-full h-auto max-h-[600px] object-contain"
@@ -89,7 +86,7 @@ function ImageCarousel({ images, title }) {
             >
               <ChevronLeft className="w-6 h-6" />
             </button>
-            
+
             <button
               onClick={nextImage}
               className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/70 hover:bg-black/90 text-white p-3 rounded-full transition-all z-20 hover:scale-110"
@@ -116,17 +113,16 @@ function ImageCarousel({ images, title }) {
                 setCurrentIndex(idx)
                 setImageLoading(true)
               }}
-              className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
-                idx === currentIndex 
-                  ? "border-cyan-400 scale-110 shadow-lg shadow-cyan-400/50" 
+              className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${idx === currentIndex
+                  ? "border-cyan-400 scale-110 shadow-lg shadow-cyan-400/50"
                   : "border-white/20 opacity-60 hover:opacity-100 hover:border-cyan-400/50"
-              }`}
+                }`}
             >
-              <img 
-                src={img} 
+              <img
+                src={img}
                 alt={`Miniatura ${idx + 1}`}
                 className="w-full h-full object-cover"
-                loading="lazy" 
+                loading="lazy"
               />
             </button>
           ))}
@@ -142,11 +138,10 @@ function ImageCarousel({ images, title }) {
                 setCurrentIndex(idx)
                 setImageLoading(true)
               }}
-              className={`w-3 h-3 rounded-full transition-all ${
-                idx === currentIndex 
-                  ? "bg-cyan-400 scale-125" 
+              className={`w-3 h-3 rounded-full transition-all ${idx === currentIndex
+                  ? "bg-cyan-400 scale-125"
                   : "bg-white/30 hover:bg-white/60"
-              }`}
+                }`}
               aria-label={`Ir a imagen ${idx + 1}`}
             />
           ))}
@@ -172,25 +167,25 @@ function GeneralMapCarousel({ latestDate }) {
         setLoading(true)
         setError(null)
         setImages([])
-        
+
         console.log(`Cargando mapas generales para fecha: ${latestDate}`)
-        
+
         const listResponse = await fetch(`${API_BASE_URL}/api/date/${latestDate}/maps/general/list`)
-        
+
         if (!listResponse.ok) {
           throw new Error('No se pudieron cargar las imágenes generales')
         }
-        
+
         const listData = await listResponse.json()
         console.log("Lista de mapas generales:", listData)
-        
-        const imageUrls = listData.images.map(img => 
+
+        const imageUrls = listData.images.map(img =>
           `${API_BASE_URL}/api/date/${latestDate}/maps/general/${img.index}?v=${latestDate}`
         )
-        
+
         console.log(`${imageUrls.length} imágenes generales cargadas`)
         setImages(imageUrls)
-        
+
       } catch (err) {
         console.error('Error cargando mapas generales:', err)
         setError(err.message)
@@ -238,39 +233,39 @@ function StormMapCarousel({ stormId, latestDate }) {
         setLoading(true)
         setError(null)
         setImages([])
-        
+
         if (latestDate) {
           console.log(`📅 HISTÓRICO: Cargando mapas para tormenta: ${stormId}, fecha: ${latestDate}`)
-          
+
           const listResponse = await fetch(`${API_BASE_URL}/api/date/${latestDate}/maps/${stormId}/list`)
-          
+
           if (!listResponse.ok) {
             throw new Error(`No se pudieron cargar las imágenes de ${stormId}`)
           }
-          
+
           const listData = await listResponse.json()
           console.log(`Lista de mapas para ${stormId}:`, listData)
-          
-          const imageUrls = listData.images.map(img => 
+
+          const imageUrls = listData.images.map(img =>
             `${API_BASE_URL}/api/date/${latestDate}/maps/${stormId}/${img.index}?v=${latestDate}`
           )
-          
+
           console.log(`✅ ${imageUrls.length} imágenes de ${stormId} cargadas`)
           setImages(imageUrls)
         } else {
           console.log(`🕐 ÚLTIMA LECTURA: Cargando última imagen para tormenta: ${stormId}`)
-          
+
           const checkResponse = await fetch(`${API_BASE_URL}/api/maps/${stormId}`, { cache: 'no-store' })
-          
+
           if (!checkResponse.ok) {
             throw new Error(`No se encontró mapa para ${stormId}`)
           }
-          
+
           const imageUrl = `${API_BASE_URL}/api/maps/${stormId}?v=${Date.now()}`
           console.log(`✅ 1 imagen de ${stormId} cargada (última lectura)`)
           setImages([imageUrl])
         }
-        
+
       } catch (err) {
         console.error(`Error cargando mapas de ${stormId}:`, err)
         setError(err.message)
@@ -391,7 +386,7 @@ function LatestAvailableGeneral() {
 export default function DashboardContent({ mainStormView, setMainStormView, activeStorms, loading, error, latestDate }) {
   const [showInfo, setShowInfo] = useState(false)
   const [selectedJSON, setSelectedJSON] = useState(null)
-  
+
   const getDangerLevelColor = (category) => {
     if (category >= 4) return "bg-red-500"
     if (category >= 2) return "bg-yellow-500"
@@ -441,7 +436,7 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
               <h3 className="text-xl font-bold text-[#EAF6F6] mb-2">No hay tormentas activas</h3>
               <p className="text-[#B2D8D8]">No se detectan tormentas tropicales en la última lectura.</p>
             </div>
-            
+
             <div className="bg-[#024b58]/80 backdrop-blur-xl rounded-[14px] border border-white/10 overflow-hidden">
               <div className="p-4 border-b border-white/10">
                 <h2 className="text-xl font-bold text-[#EAF6F6]">Mapa General</h2>
@@ -457,11 +452,10 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               <button
                 onClick={() => setMainStormView(null)}
-                className={`bg-[#024b58]/80 backdrop-blur-xl rounded-[14px] border transition-all duration-300 overflow-hidden text-left group hover:scale-[1.02] ${
-                  !mainStormView
+                className={`bg-[#024b58]/80 backdrop-blur-xl rounded-[14px] border transition-all duration-300 overflow-hidden text-left group hover:scale-[1.02] ${!mainStormView
                     ? "border-cyan-400/40 shadow-lg shadow-cyan-400/25"
                     : "border-white/10 hover:border-cyan-400/30 shadow-lg hover:shadow-cyan-400/15"
-                }`}
+                  }`}
               >
                 <div className="h-1 bg-gradient-to-r from-green-500/50 to-emerald-500/50" />
                 <div className="relative aspect-[4/3] flex items-center justify-center">
@@ -475,7 +469,7 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
                     onClick={(e) => {
                       e.stopPropagation()
                       // VALORES HARDCODED PARA FRONTEND (Vista General - Última)
-                      setSelectedJSON({ 
+                      setSelectedJSON({
                         view: "GENERAL_LATEST",
                         note: "DATOS HARDCODED PARA FRONTEND",
                         status: "waiting_backend_implementation"
@@ -497,27 +491,26 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
                   <button
                     key={storm.id}
                     onClick={() => setMainStormView(storm)}
-                    className={`bg-[#024b58]/80 rounded-[14px] border transition-all duration-300 overflow-hidden text-left group hover:scale-[1.02] ${
-                      isSelected
+                    className={`bg-[#024b58]/80 rounded-[14px] border transition-all duration-300 overflow-hidden text-left group hover:scale-[1.02] ${isSelected
                         ? "border-cyan-400/40 shadow-lg shadow-cyan-400/25"
                         : "border-white/10 hover:border-cyan-400/30 shadow-lg hover:shadow-cyan-400/15"
-                    }`}
+                      }`}
                   >
                     <div className={`h-1 ${dangerColor}`} />
                     <div className="relative aspect-[4/3] flex items-center justify-center bg-[#013f4e]">
                       {storm.imageUrl && !storm.invest ? (
-                        <img 
-                          src={storm.imageUrl} 
+                        <img
+                          src={storm.imageUrl}
                           alt={storm.nombre || storm.name}
                           className="w-full h-full object-cover"
-                          loading="lazy" 
+                          loading="lazy"
                           onError={(e) => {
                             e.target.style.display = 'none'
                             e.target.nextSibling.style.display = 'flex'
                           }}
                         />
                       ) : null}
-                      <div className={storm.imageUrl && !storm.invest ? "hidden" : "flex"} style={{position: 'absolute', inset: 0, alignItems: 'center', justifyContent: 'center'}}>
+                      <div className={storm.imageUrl && !storm.invest ? "hidden" : "flex"} style={{ position: 'absolute', inset: 0, alignItems: 'center', justifyContent: 'center' }}>
                         <Wind className="w-12 h-12 text-cyan-400 opacity-40" />
                       </div>
                     </div>
@@ -532,7 +525,7 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
                         onClick={(e) => {
                           e.stopPropagation()
                           // VALORES HARDCODED PARA FRONTEND (Tormenta Específica - Última)
-                          setSelectedJSON({ 
+                          setSelectedJSON({
                             view: "SPECIFIC_STORM_LATEST",
                             stormId: storm.id, // Mantenemos el ID real para referencia
                             note: "DATOS HARDCODED PARA FRONTEND",
@@ -554,11 +547,11 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
               <div className="p-4 border-b border-white/10">
                 <h2 className="text-xl font-bold text-[#EAF6F6]">
                   {
-                    !mainStormView 
+                    !mainStormView
                       ? "Mapa General (Última Lectura)"
-                    : mainStormView.invest
-                      ? `Área de Investigación: ${mainStormView.nombre || mainStormView.name}`
-                      : `Mapa de ${mainStormView.nombre || mainStormView.name} (Última Lectura)`
+                      : mainStormView.invest
+                        ? `Área de Investigación: ${mainStormView.nombre || mainStormView.name}`
+                        : `Mapa de ${mainStormView.nombre || mainStormView.name} (Última Lectura)`
                   }
                 </h2>
               </div>
@@ -567,20 +560,20 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
                 {
                   !mainStormView ? (
                     <LatestAvailableGeneral />
-                  ) 
-                  : mainStormView.invest ? (
-                    <div className="text-center py-8">
-                      <Wind className="w-12 h-12 text-slate-500 mx-auto mb-2 opacity-30" />
-                      <h3 className="text-lg font-bold text-[#EAF6F6]">Investigación Activa</h3>
-                      <p className="text-[#B2D8D8]">No hay mapas individuales para esta área.</p>
-                    </div>
-                  ) 
-                  : (
-                    <StormMapCarousel 
-                      stormId={mainStormView.id} 
-                      latestDate={null}
-                    />
                   )
+                    : mainStormView.invest ? (
+                      <div className="text-center py-8">
+                        <Wind className="w-12 h-12 text-slate-500 mx-auto mb-2 opacity-30" />
+                        <h3 className="text-lg font-bold text-[#EAF6F6]">Investigación Activa</h3>
+                        <p className="text-[#B2D8D8]">No hay mapas individuales para esta área.</p>
+                      </div>
+                    )
+                      : (
+                        <StormMapCarousel
+                          stormId={mainStormView.id}
+                          latestDate={null}
+                        />
+                      )
                 }
               </div>
             </div>
@@ -606,7 +599,7 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
           {mainStormView ? mainStormView.nombre || mainStormView.name : "Vista General de Tormentas"}
         </h1>
         <p className="text-[#B2D8D8] text-sm">
-          {mainStormView 
+          {mainStormView
             ? `${mainStormView.ubicacion || mainStormView.location || 'Sin ubicación'}`
             : "Monitoreo en tiempo real de tormentas tropicales"}
         </p>
@@ -625,103 +618,101 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <button
-              onClick={() => setMainStormView(null)}
-              className={`bg-[#024b58]/80 backdrop-blur-xl rounded-[14px] border transition-all duration-300 overflow-hidden text-left group hover:scale-[1.02] ${
-                !mainStormView
-                  ? "border-cyan-400/40 shadow-lg shadow-cyan-400/25"
-                  : "border-white/10 hover:border-cyan-400/30 shadow-lg hover:shadow-cyan-400/15"
+          <button
+            onClick={() => setMainStormView(null)}
+            className={`bg-[#024b58]/80 backdrop-blur-xl rounded-[14px] border transition-all duration-300 overflow-hidden text-left group hover:scale-[1.02] ${!mainStormView
+                ? "border-cyan-400/40 shadow-lg shadow-cyan-400/25"
+                : "border-white/10 hover:border-cyan-400/30 shadow-lg hover:shadow-cyan-400/15"
               }`}
-            >
-              <div className="h-1 bg-gradient-to-r from-green-500/50 to-emerald-500/50" />
-              <div className="relative aspect-[4/3] flex items-center justify-center">
-                <Tornado className="w-12 h-12 text-cyan-400 opacity-50" />
-              </div>
-              <div className="p-3">
-                <h3 className="text-sm font-bold text-[#EAF6F6] group-hover:text-cyan-300 transition-colors">
-                  Vista General
-                </h3>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    // VALORES HARDCODED PARA FRONTEND (Vista General - Histórica)
-                    setSelectedJSON({ 
-                      view: "GENERAL_HISTORIC",
-                      date: latestDate,
-                      note: "DATOS HARDCODED PARA FRONTEND",
-                      status: "waiting_backend_implementation"
-                    })
-                    setShowInfo(true)
-                  }}
-                  className="mt-2 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 px-2 py-1 rounded-lg text-xs transition-all"
-                >
-                  JSON
-                </button>
-              </div>
-            </button>
+          >
+            <div className="h-1 bg-gradient-to-r from-green-500/50 to-emerald-500/50" />
+            <div className="relative aspect-[4/3] flex items-center justify-center">
+              <Tornado className="w-12 h-12 text-cyan-400 opacity-50" />
+            </div>
+            <div className="p-3">
+              <h3 className="text-sm font-bold text-[#EAF6F6] group-hover:text-cyan-300 transition-colors">
+                Vista General
+              </h3>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  // VALORES HARDCODED PARA FRONTEND (Vista General - Histórica)
+                  setSelectedJSON({
+                    view: "GENERAL_HISTORIC",
+                    date: latestDate,
+                    note: "DATOS HARDCODED PARA FRONTEND",
+                    status: "waiting_backend_implementation"
+                  })
+                  setShowInfo(true)
+                }}
+                className="mt-2 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 px-2 py-1 rounded-lg text-xs transition-all"
+              >
+                JSON
+              </button>
+            </div>
+          </button>
 
-            {activeStorms.map((storm) => {
-              const isSelected = mainStormView?.id === storm.id
-              const category = storm.categoria || storm.category || 1
-              const dangerColor = getDangerLevelColor(category)
+          {activeStorms.map((storm) => {
+            const isSelected = mainStormView?.id === storm.id
+            const category = storm.categoria || storm.category || 1
+            const dangerColor = getDangerLevelColor(category)
 
-              return (
-                <button
-                  key={storm.id}
-                  onClick={() => setMainStormView(storm)}
-                  className={`bg-[#024b58]/80 rounded-[14px] border transition-all duration-300 overflow-hidden text-left group hover:scale-[1.02] ${
-                    isSelected
-                      ? "border-cyan-400/40 shadow-lg shadow-cyan-400/25"
-                      : "border-white/10 hover:border-cyan-400/30 shadow-lg hover:shadow-cyan-400/15"
+            return (
+              <button
+                key={storm.id}
+                onClick={() => setMainStormView(storm)}
+                className={`bg-[#024b58]/80 rounded-[14px] border transition-all duration-300 overflow-hidden text-left group hover:scale-[1.02] ${isSelected
+                    ? "border-cyan-400/40 shadow-lg shadow-cyan-400/25"
+                    : "border-white/10 hover:border-cyan-400/30 shadow-lg hover:shadow-cyan-400/15"
                   }`}
-                >
-                  <div className={`h-1 ${dangerColor}`} />
-                  <div className="relative aspect-[4/3] flex items-center justify-center bg-[#013f4e]">
-                    {storm.imageUrl && !storm.invest ? (
-                      <img 
-                        src={storm.imageUrl} 
-                        alt={storm.nombre || storm.name}
-                        className="w-full h-full object-cover"
-                        loading="lazy" 
-                        onError={(e) => {
-                          e.target.style.display = 'none'
-                          e.target.nextSibling.style.display = 'flex'
-                        }}
-                      />
-                    ) : null}
-
-                    <div className={storm.imageUrl && !storm.invest ? "hidden" : "flex"} style={{position: 'absolute', inset: 0, alignItems: 'center', justifyContent: 'center'}}>
-                      <Wind className="w-12 h-12 text-cyan-400 opacity-40" />
-                    </div>
-                  </div>
-                  <div className="p-3">
-                    <h3 className="text-sm font-bold text-[#EAF6F6] group-hover:text-cyan-300 transition-colors">
-                      {storm.nombre || storm.name || `Tormenta ${storm.id}`}
-                    </h3>
-                    <p className="text-xs text-[#B2D8D8] mt-1">
-                      Categoría {category}
-                    </p>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        // VALORES HARDCODED PARA FRONTEND (Tormenta Específica - Histórica)
-                        setSelectedJSON({ 
-                          view: "SPECIFIC_STORM_HISTORIC",
-                          stormId: storm.id,
-                          date: latestDate,
-                          note: "DATOS HARDCODED PARA FRONTEND",
-                          status: "waiting_backend_implementation"
-                        })
-                        setShowInfo(true)
+              >
+                <div className={`h-1 ${dangerColor}`} />
+                <div className="relative aspect-[4/3] flex items-center justify-center bg-[#013f4e]">
+                  {storm.imageUrl && !storm.invest ? (
+                    <img
+                      src={storm.imageUrl}
+                      alt={storm.nombre || storm.name}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                      onError={(e) => {
+                        e.target.style.display = 'none'
+                        e.target.nextSibling.style.display = 'flex'
                       }}
-                      className="mt-2 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 px-2 py-1 rounded-lg text-xs transition-all"
-                    >
-                      JSON
-                    </button>
+                    />
+                  ) : null}
+
+                  <div className={storm.imageUrl && !storm.invest ? "hidden" : "flex"} style={{ position: 'absolute', inset: 0, alignItems: 'center', justifyContent: 'center' }}>
+                    <Wind className="w-12 h-12 text-cyan-400 opacity-40" />
                   </div>
-                </button>
-              )
-            })}
+                </div>
+                <div className="p-3">
+                  <h3 className="text-sm font-bold text-[#EAF6F6] group-hover:text-cyan-300 transition-colors">
+                    {storm.nombre || storm.name || `Tormenta ${storm.id}`}
+                  </h3>
+                  <p className="text-xs text-[#B2D8D8] mt-1">
+                    Categoría {category}
+                  </p>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      // VALORES HARDCODED PARA FRONTEND (Tormenta Específica - Histórica)
+                      setSelectedJSON({
+                        view: "SPECIFIC_STORM_HISTORIC",
+                        stormId: storm.id,
+                        date: latestDate,
+                        note: "DATOS HARDCODED PARA FRONTEND",
+                        status: "waiting_backend_implementation"
+                      })
+                      setShowInfo(true)
+                    }}
+                    className="mt-2 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 px-2 py-1 rounded-lg text-xs transition-all"
+                  >
+                    JSON
+                  </button>
+                </div>
+              </button>
+            )
+          })}
         </div>
       )}
 
@@ -729,17 +720,17 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
         <div className="p-4 border-b border-white/10">
           <h2 className="text-xl font-bold text-[#EAF6F6]">
             {
-              !mainStormView 
+              !mainStormView
                 ? "Mapas Generales de Tormentas"
-              : mainStormView.invest 
-                ? `Área de Investigación: ${mainStormView.nombre || mainStormView.name}`
-                : `Mapas de ${mainStormView.nombre || mainStormView.name}`
+                : mainStormView.invest
+                  ? `Área de Investigación: ${mainStormView.nombre || mainStormView.name}`
+                  : `Mapas de ${mainStormView.nombre || mainStormView.name}`
             }
           </h2>
 
           <p className="text-sm text-[#B2D8D8] mt-1">
-            {mainStormView 
-              ? `ID: ${mainStormView.id}` 
+            {mainStormView
+              ? `ID: ${mainStormView.id}`
               : `Todas las actualizaciones del ${latestDate || 'día seleccionado'}`}
           </p>
         </div>
@@ -748,22 +739,22 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
           {
             !mainStormView ? (
               <GeneralMapCarousel latestDate={latestDate} />
-            ) 
-            : mainStormView.invest ? (
-              <div className="text-center py-8">
-                <Wind className="w-12 h-12 text-slate-500 mx-auto mb-2 opacity-30" />
-                <h3 className="text-lg font-bold text-[#EAF6F6]">Investigación Activa</h3>
-                <p className="text-[#B2D8D8]">
-                  No hay mapas de pronóstico individuales para esta área de investigación.
-                </p>
-              </div>
-            ) 
-            : (
-              <StormMapCarousel 
-                stormId={mainStormView.id} 
-                latestDate={latestDate}
-              />
             )
+              : mainStormView.invest ? (
+                <div className="text-center py-8">
+                  <Wind className="w-12 h-12 text-slate-500 mx-auto mb-2 opacity-30" />
+                  <h3 className="text-lg font-bold text-[#EAF6F6]">Investigación Activa</h3>
+                  <p className="text-[#B2D8D8]">
+                    No hay mapas de pronóstico individuales para esta área de investigación.
+                  </p>
+                </div>
+              )
+                : (
+                  <StormMapCarousel
+                    stormId={mainStormView.id}
+                    latestDate={latestDate}
+                  />
+                )
           }
         </div>
       </div>
