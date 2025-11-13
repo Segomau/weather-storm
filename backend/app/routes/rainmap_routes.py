@@ -4,6 +4,11 @@ import numpy as np, requests, concurrent.futures, time
 
 router = APIRouter()
 
+# --- CACHE SIMPLE ---
+# Guardará el último resultado del mapa de lluvia por 10 minutos (600 segundos)
+RAIN_CACHE = {"data": None, "timestamp": 0, "key": ""}
+RAIN_CACHE_TTL = 600  # 10 minutos
+
 
 # --- 1. Generate grid points ---
 def generate_grid(grid_size=15):
@@ -90,15 +95,31 @@ def generate_real_time_json(grid_size=15, density=100):
     }
 
 
-# --- 8. FastAPI route ---
+# --- 8. FastAPI route (CON CACHE) ---
 @router.get("/realtime")
 async def get_real_time_rainmap(grid_size: int = 15, density: int = 50):
     """
-    Returns real-time interpolated rain data as JSON.
-    Example: GET /rainmap/realtime?grid_size=10&density=40
+    Devuelve datos de lluvia interpolados en tiempo real.
+    Ahora usa un cache de 10 minutos para evitar recalcular.
     """
+    current_time = time.time()
+    cache_key = f"{grid_size}:{density}"
+
+    # 1. Verificar si hay un cache válido
+    if (
+        RAIN_CACHE["key"] == cache_key
+        and (current_time - RAIN_CACHE["timestamp"] < RAIN_CACHE_TTL)
+        and RAIN_CACHE["data"]
+    ):
+        return JSONResponse(content=RAIN_CACHE["data"])
+
+    # 2. Si no hay cache, calcular
     try:
         result = generate_real_time_json(grid_size, density)
+        # 3. Guardar en cache
+        RAIN_CACHE["data"] = result
+        RAIN_CACHE["timestamp"] = current_time
+        RAIN_CACHE["key"] = cache_key
         return JSONResponse(content=result)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
