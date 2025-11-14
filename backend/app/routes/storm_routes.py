@@ -6,7 +6,7 @@ from datetime import datetime
 
 router = APIRouter()
 DATA_DIR = Path(
-    r"C:\Users\hanna\OneDrive\Documents\final\weather-storm\Data\Data"
+    r"C:\Users\mayra\OneDrive\Escritorio\UNI\weather-storm\Data\Data"
 )
 
 # --- CACHE SIMPLE ---
