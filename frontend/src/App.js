@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from "react"
-import RainmapSidebar from "./components/rainmap/RainMapSideBar"
-import RainmapContent from "./components/rainmap/RainMapContent"
-import DashboardSidebar from "./components/dashboard/DashboardSidebar"
-import DashboardContent from "./components/dashboard/DashboardContent"
+import { useState, useEffect } from "react"
+import HomePage from "./components/HomePage"
+import Rainmap from "./components/rainmap/RainMapMain.jsx"
+import Storms from "./components/dashboard/StormsMain.jsx"
 
 const API_BASE_URL = "http://localhost:8000"
 
@@ -60,7 +59,7 @@ const processStormData = (data, imageDate) => {
 }
 
 function App() {
-  const [view, setView] = useState("map")
+  const [currentView, setCurrentView] = useState("home") // "home", "map", "dashboard"
   const [selectedCity, setSelectedCity] = useState(null)
   const [weatherData, setWeatherData] = useState(null)
   const [mainStormView, setMainStormView] = useState(null)
@@ -71,25 +70,39 @@ function App() {
 
   // useEffect #1: Para el CALENDARIO (fechas históricas)
   useEffect(() => {
-    if (view === "dashboard" && latestDate) {
+    if (currentView === "dashboard" && latestDate) {
       setMainStormView(null);
       fetchStormsByDate(latestDate);
     }
-  }, [latestDate])
+  }, [latestDate, currentView])
 
   // useEffect #2: Para CAMBIAR DE VISTA (Carga inicial o Limpieza)
   useEffect(() => {
-    if (view === "dashboard") {
+    if (currentView === "dashboard") {
       setMainStormView(null);
       if (!latestDate) {
         fetchLatestStorms();
       }
-    } else {
+    } else if (currentView === "map") {
       setLatestDate(null);
       setActiveStorms([]);
       setError(null);
     }
-  }, [view])
+  }, [currentView])
+
+  // Función para navegar desde HomePage
+  const navigateTo = (view) => {
+    setCurrentView(view);
+  }
+
+  // Función para volver al home
+  const navigateToHome = () => {
+    setCurrentView("home");
+    setMainStormView(null);
+    setSelectedCity(null);
+    setActiveStorms([]);
+    setError(null);
+  }
 
   // Función para el CALENDARIO (Histórico)
   const fetchStormsByDate = async (dateString) => {
@@ -170,44 +183,49 @@ function App() {
     }
   }
 
-  return (
-    <div className="flex min-h-screen bg-[#013f4e] text-white overflow-hidden">
-      <div className="w-80 border-r border-white/10">
-        {view === "map" ? (
-          <RainmapSidebar
-            view={view}
-            setView={setView}
+  // Renderizar la vista actual
+  const renderCurrentView = () => {
+    switch (currentView) {
+      case "home":
+        return <HomePage onNavigate={navigateTo} />
+      
+      case "map":
+        return (
+          <Rainmap
+            view="map"
+            setView={navigateTo}
             selectedCity={selectedCity}
             setSelectedCity={setSelectedCity}
             weatherData={weatherData}
             setWeatherData={setWeatherData}
+            onNavigateHome={navigateToHome}
           />
-        ) : (
-          <DashboardSidebar 
-            view={view} 
-            setView={setView} 
+        )
+      
+      case "dashboard":
+        return (
+          <Storms
+            view="dashboard"
+            setView={navigateTo}
             mainStormView={mainStormView}
-            activeStorms={activeStorms}
-            activeDate={latestDate}
-            onDateChange={setLatestDate}
-          />
-        )}
-      </div>
-
-      <div className="flex-1">
-        {view === "map" ? (
-          <RainmapContent selectedCity={selectedCity} />
-        ) : (
-          <DashboardContent 
-            mainStormView={mainStormView} 
             setMainStormView={setMainStormView}
             activeStorms={activeStorms}
             loading={loading}
             error={error}
             latestDate={latestDate}
+            onDateChange={setLatestDate}
+            onNavigateHome={navigateToHome}
           />
-        )}
-      </div>
+        )
+      
+      default:
+        return <HomePage onNavigate={navigateTo} />
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-rainmap-bg text-rainmap-contrast overflow-hidden">
+      {renderCurrentView()}
     </div>
   )
 }

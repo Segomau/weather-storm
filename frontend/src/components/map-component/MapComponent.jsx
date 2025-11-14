@@ -1,70 +1,91 @@
 import { useEffect, useRef, useState } from "react";
+import Dropdown from "./DropDown";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
-// http://localhost:8000/rainmap/realtime?grid_size=25&density=1000
-const API_BASE_URL = "http://localhost:8000";
+// http://localhost:8000/rainmap/realtime?grid_size=5&density=5
+// http://localhost:8000/rainmap/city
 
-export default function MapComponent() {
+const API_BASE_URL = "http://localhost:8000/rainmap";
+
+export default function MapComponent({ selectedCity = "Ciudad de Mexico" }) {
   const mapRef = useRef(null);
-  const [loading, setLoading] = useState(true); // 👈 estado para mostrar mensaje de carga
-  const [rainData, setRainData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [precipData, setPrecipData] = useState(null);
+  const [cityData, setCityData] = useState(null);
 
-  // 1️⃣ Fetch data del backend
+  // --- Fetch precip data ---
   useEffect(() => {
     const fetchData = async () => {
       try {
-        console.log("🌧️ Cargando datos del mapa de lluvia...");
-        const res = await fetch(`${API_BASE_URL}/rainmap/realtime?grid_size=15&density=50`);
-        if (!res.ok) throw new Error("Error al obtener datos del servidor");
+        console.log("🌧️ Loading rain map data...");
+        const res = await fetch(`${API_BASE_URL}/realtime?grid_size=15&density=100`);
+        if (!res.ok) throw new Error("Error fetching data from server");
         const data = await res.json();
-        console.log("✅ Datos recibidos:", data);
-        setRainData(data);
+        console.log("✅ Data received:", data);
+        setPrecipData(data);
       } catch (err) {
-        console.error("❌ Error cargando datos:", err);
+        console.error("❌ Error loading data:", err);
       } finally {
-        setLoading(false); // 👈 indicamos que ya terminó el fetch
+        setLoading(false);
       }
     };
     fetchData();
   }, []);
 
-  // 2️⃣ Inicializar mapa solo una vez
+  // --- Fetch city data ---
   useEffect(() => {
-    if (mapRef.current) return; // evita reinicializar
+    const fetchCity = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/city?selectedCity=${selectedCity.name}`);
+        if (!res.ok) throw new Error("Error fetching city data");
+        const data = await res.json();
+        console.log("📍 City data received:", data);
+        setCityData(data);
+      } catch (err) {
+        console.error("❌ Error loading city data:", err);
+      }
+    };
+    fetchCity();
+  }, [selectedCity]);
+
+  // --- Init map ---
+  useEffect(() => {
+    if (mapRef.current) return;
 
     const map = new maplibregl.Map({
       container: "mexico-map",
       style: "https://api.maptiler.com/maps/01993703-c461-7fcb-9563-ed497090c6bc/style.json?key=mUwxoW7vdNmBrfqeJhw1",
       center: [-102.5528, 24.0],
-      zoom: 4.5,
+      zoom: 2,
     });
 
     const mexicoBounds = [
-      [-118, 14.5],
-      [-86.5, 32.75],
+      [-118, 13.5],
+      [-87, 33.75],
     ];
+
     map.setMaxBounds(mexicoBounds);
     map.addControl(new maplibregl.NavigationControl(), "top-right");
 
     mapRef.current = map;
   }, []);
 
-  // 3️⃣ Una vez cargado el mapa + datos → agregar capas
+  // --- Add rain heatmap ---
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !rainData) return; // espera a ambos
+    if (!map || !precipData) return;
 
     const handleLoad = () => {
-      console.log("🗺️ Mapa cargado. Agregando puntos de lluvia...");
+      console.log("🗺️ Map loaded. Adding rain points...");
 
       const geoJsonData = {
         type: "FeatureCollection",
-        features: rainData.data.map((p, i) => ({
+        features: precipData.data.map((p, i) => ({
           type: "Feature",
           properties: {
-            intensity: calculateIntensity(p.rain),
-            rain: p.rain,
+            intensity: p.precipitation,
+            precipitation: p.precipitation,
             id: i,
           },
           geometry: { type: "Point", coordinates: [p.lon, p.lat] },
@@ -75,60 +96,118 @@ export default function MapComponent() {
         map.addSource("intensity-data", { type: "geojson", data: geoJsonData });
 
         map.addLayer({
-          id: "intensity-blur",
-          type: "circle",
+          id: "rain-heatmap",
+          type: "heatmap",
           source: "intensity-data",
           paint: {
-            // 🔵 Tamaño de los puntos: escala ajustada 0–2
-            "circle-radius": [
+            "heatmap-weight": ["interpolate", ["linear"], ["get", "intensity"], 0, 0, 3, 1],
+            "heatmap-intensity": 1,
+            "heatmap-radius": 20,
+            "heatmap-opacity": 1,
+            "heatmap-color": [
               "interpolate",
               ["linear"],
-              ["get", "intensity"],
-              0, 5,   // Tamaño mínimo (sin lluvia)
-              1, 10,   // Tamaño medio
-              2, 15    // Tamaño máximo (lluvia extrema)
-            ],
-
-            // 🌈 Escala de color: 0 (verde) → 2 (rojo)
-            "circle-color": [
-              "interpolate",
-              ["linear"],
-              ["get", "intensity"],
-              0, "rgba(0, 200, 0, 0.8)",   // Verde: sin lluvia
-              1, "rgba(255, 255, 0, 0.9)", // Amarillo: lluvia moderada
-              2, "rgba(200, 0, 0, 0.9)"    // Rojo: lluvia intensa
-            ],
-
-            // 🔘 Opacidad y difuminado
-            "circle-opacity": 0.3,
-            "circle-blur": 0.2,
-          },
+              ["heatmap-density"],
+              0, "rgba(0, 200, 0, 0)",
+              0.2, "rgba(120, 0, 150, 0.6)",
+              0.4, "rgba(180, 0, 120, 0.7)",
+              0.6, "rgba(230, 80, 0, 0.8)",
+              0.8, "rgba(255, 100, 0, 0.9)",
+              1, "rgba(255, 0, 0, 1)"
+            ]
+          }
         });
       } else {
         map.getSource("intensity-data").setData(geoJsonData);
       }
-
     };
 
     if (map.loaded()) handleLoad();
     else map.on("load", handleLoad);
-  }, [rainData]);
+  }, [precipData]);
 
-  // 4️⃣ Helper para convertir intensidad
-  const calculateIntensity = (rain) => {
-    if (rain === 0) return 0;
-    if (rain <= 1) return 0.5;
-    if (rain <= 2) return 1;
-  };
+  // --- Add city marker ---
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !cityData) return;
+
+    const handleCity = () => {
+      const cityGeoJson = {
+        type: "FeatureCollection",
+        features: [
+          {
+            type: "Feature",
+            geometry: { type: "Point", coordinates: [cityData.lon, cityData.lat] },
+            properties: {
+              precipitation: cityData.precipitation,
+              name: selectedCity,
+            },
+          },
+        ],
+      };
+
+      if (!map.getSource("city-point")) {
+        map.addSource("city-point", { type: "geojson", data: cityGeoJson });
+
+        map.addLayer({
+          id: "city-marker",
+          type: "circle",
+          source: "city-point",
+          paint: {
+            "circle-radius": 10,
+            "circle-color": [
+              "interpolate",
+              ["linear"],
+              ["get", "precipitation"],
+              0, "rgba(0, 200, 0, 1)",
+              0.5, "rgba(120, 0, 150, 0.6)",
+              1, "rgba(180, 0, 120, 0.7)",
+              1.5, "rgba(230, 80, 0, 0.8)",
+              2, "rgba(255, 100, 0, 0.9)",
+              2.5, "rgba(255, 0, 0, 1)"
+            ],
+            "circle-opacity": 0.7,
+            "circle-blur": 0.2,
+            "circle-stroke-width": 2,
+            "circle-stroke-color": "#ffffff",
+          },
+        });
+      } else {
+        map.getSource("city-point").setData(cityGeoJson);
+      }
+    };
+
+    if (map.loaded()) handleCity();
+    else map.on("load", handleCity);
+  }, [cityData]);
 
   return (
     <div className="relative w-full h-full">
       {loading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-[#013f4e] text-white z-10">
-          <div className="animate-pulse">🌧️ Cargando mapa de lluvia...</div>
+        <div
+          role="status"
+          aria-live="polite"
+          className="
+            absolute inset-0 z-10 flex items-center justify-center
+            bg-[rgba(10,10,12,0.6)]
+            backdrop-blur-xl
+            border border-[rgba(180,255,255,0.25)]
+            rounded-2xl
+            shadow-[0_8px_30px_rgba(0,0,0,0.25)]
+            text-rainmap-contrast
+            animate-pulse
+          "
+        >
+          <div className="text-rainmap.contrast text-sm">
+            🌧️ Cargando mapa de lluvia...
+          </div>
         </div>
       )}
+
       <div id="mexico-map" className="w-full h-full" />
+
+      {/* Dropdown kept untouched, only styling happens inside the component */}
+      <Dropdown />
     </div>
   );
 }
