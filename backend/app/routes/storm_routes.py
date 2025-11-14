@@ -1,13 +1,19 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 from pathlib import Path
-import json, glob, os
+import json, glob, os, time
 from datetime import datetime
 
 router = APIRouter()
 DATA_DIR = Path(
-    r"C:\Users\lmdg3\OneDrive\Documents\LUIS\COSAS DE LA UNI\MARINA\weather-prediction-app\Data\Data"
+    r"C:\Users\hanna\OneDrive\Documents\final\weather-storm\Data\Data"
 )
+
+# --- CACHE SIMPLE ---
+# Guardará las rutas a los directorios por 5 minutos (300 segundos)
+LATEST_DIR_CACHE = {"path": None, "timestamp": 0}
+DATE_DIR_CACHE = {}  # key: date, value: {"path": None, "timestamp": 0}
+CACHE_TTL = 300  # 5 minutos
 
 
 def parse_dirname_timestamp(dir_path):
@@ -47,32 +53,70 @@ async def startup_event():
 
 
 def get_latest_directory():
-    """Devuelve el directorio más reciente parseando el timestamp del nombre"""
+    """Devuelve el directorio más reciente (AHORA CON CACHE)"""
+    current_time = time.time()
+    # 1. Verificar cache
+    if LATEST_DIR_CACHE["path"] and (
+        current_time - LATEST_DIR_CACHE["timestamp"] < CACHE_TTL
+    ):
+        return LATEST_DIR_CACHE["path"]
+
+    # 2. Si no hay cache, escanear
     if not DATA_DIR.exists():
         return None
-
     dirs = [d for d in DATA_DIR.glob("*") if d.is_dir()]
     if not dirs:
         return None
 
-    return max(dirs, key=parse_dirname_timestamp)
+    # 3. Calcular y guardar en cache
+    latest = max(dirs, key=parse_dirname_timestamp)
+    LATEST_DIR_CACHE["path"] = latest
+    LATEST_DIR_CACHE["timestamp"] = current_time
+    return latest
 
 
 def get_directory_by_date(target_date: str):
-    """Encuentra el directorio más reciente que contenga la fecha especificada"""
+    """Encuentra el directorio más reciente para una fecha (AHORA CON CACHE)"""
+    current_time = time.time()
+    # 1. Verificar cache para esta fecha
+    if target_date in DATE_DIR_CACHE and (
+        current_time - DATE_DIR_CACHE[target_date]["timestamp"] < CACHE_TTL
+    ):
+        return DATE_DIR_CACHE[target_date]["path"]
+
+    # 2. Si no hay cache, escanear
     if not DATA_DIR.exists():
         return None
+    matching_dirs = [
+        dir_path
+        for dir_path in DATA_DIR.glob(f"*{target_date}*")
+        if dir_path.is_dir()
+    ]
 
-    matching_dirs = []
-    for dir_path in DATA_DIR.glob("*"):
-        if dir_path.is_dir() and target_date in dir_path.name:
-            matching_dirs.append(dir_path)
-
+    # 3. Calcular y guardar en cache
     if not matching_dirs:
+        DATE_DIR_CACHE[target_date] = {"path": None, "timestamp": current_time}
         return None
 
-    # Usar la misma lógica de timestamp para elegir el más reciente
-    return max(matching_dirs, key=parse_dirname_timestamp)
+    latest_for_date = max(matching_dirs, key=parse_dirname_timestamp)
+    DATE_DIR_CACHE[target_date] = {"path": latest_for_date, "timestamp": current_time}
+    return latest_for_date
+
+
+# --- NUEVA FUNCIÓN ---
+def get_all_dirs_by_date(target_date: str):
+    """Encuentra TODOS los directorios de una fecha, ordenados por timestamp."""
+    if not DATA_DIR.exists():
+        return []
+    
+    matching_dirs = [
+        dir_path
+        for dir_path in DATA_DIR.glob(f"*{target_date}*")
+        if dir_path.is_dir()
+    ]
+    
+    # Ordenar por el timestamp para que las imágenes salgan en orden
+    return sorted(matching_dirs, key=parse_dirname_timestamp)
 
 
 @router.get("/")
@@ -235,29 +279,40 @@ def get_storm_map(storm_id: str):
 
 
 # NUEVAS RUTAS PARA OBTENER METADATA DE IMÁGENES
+# (Estas rutas usan 'glob' recursivo y pueden ser lentas)
+# (Sería ideal optimizarlas si la lentitud persiste)
+
 @router.get("/date/{date}/maps/general/list")
 def get_all_general_maps_metadata_by_date(date: str):
     """
     Devuelve una lista con índices de todas las imágenes PNG (mapa_*.png)
     para poder accederlas individualmente.
+    ¡ARREGLADO! Ahora busca en TODOS los directorios de esa fecha.
     """
-    base_path = str(DATA_DIR.resolve())
-    search_pattern = os.path.join(base_path, f"**/*{date}*/Mapas/mapa_*.png")
-    image_paths = glob.glob(search_pattern, recursive=True)
+    all_dirs = get_all_dirs_by_date(date)
+    if not all_dirs:
+        raise HTTPException(
+            status_code=404, detail=f"No se encontraron datos para la fecha {date}."
+        )
 
-    if not image_paths:
+    all_image_paths = []
+    for dir_path in all_dirs:
+        map_dir = dir_path / "Mapas"
+        if map_dir.exists():
+            # Añadimos todos los mapas encontrados, ya ordenados por nombre de archivo
+            all_image_paths.extend(sorted(map_dir.glob("mapa_*.png")))
+
+    if not all_image_paths:
         raise HTTPException(
             status_code=404, detail=f"No se encontraron mapas para la fecha {date}."
         )
 
-    image_paths = sorted([os.path.normpath(path) for path in image_paths])
-
     return {
         "date": date,
-        "total_images": len(image_paths),
+        "total_images": len(all_image_paths),
         "images": [
-            {"index": i, "filename": os.path.basename(path)}
-            for i, path in enumerate(image_paths)
+            {"index": i, "filename": path.name}
+            for i, path in enumerate(all_image_paths)
         ],
     }
 
@@ -266,23 +321,32 @@ def get_all_general_maps_metadata_by_date(date: str):
 def get_general_map_by_date_and_index(date: str, index: int):
     """
     Devuelve la imagen PNG del mapa general en la posición 'index' para la fecha dada.
+    ¡ARREGLADO! Ahora busca en TODOS los directorios de esa fecha.
     """
-    base_path = str(DATA_DIR.resolve())
-    search_pattern = os.path.join(base_path, f"**/*{date}*/Mapas/mapa_*.png")
-    image_paths = sorted(glob.glob(search_pattern, recursive=True))
+    all_dirs = get_all_dirs_by_date(date)
+    if not all_dirs:
+        raise HTTPException(
+            status_code=404, detail=f"No se encontraron datos para la fecha {date}."
+        )
 
-    if not image_paths:
+    all_image_paths = []
+    for dir_path in all_dirs:
+        map_dir = dir_path / "Mapas"
+        if map_dir.exists():
+            all_image_paths.extend(sorted(map_dir.glob("mapa_*.png")))
+
+    if not all_image_paths:
         raise HTTPException(
             status_code=404, detail=f"No se encontraron mapas para la fecha {date}."
         )
 
-    if index < 0 or index >= len(image_paths):
+    if index < 0 or index >= len(all_image_paths):
         raise HTTPException(
             status_code=404,
-            detail=f"Índice {index} fuera de rango. Total de imágenes: {len(image_paths)}",
+            detail=f"Índice {index} fuera de rango. Total de imágenes: {len(all_image_paths)}",
         )
 
-    return FileResponse(image_paths[index], media_type="image/png")
+    return FileResponse(all_image_paths[index], media_type="image/png")
 
 
 @router.get("/date/{date}/maps/{storm_id}/list")
@@ -290,26 +354,34 @@ def get_storm_maps_metadata_by_date(date: str, storm_id: str):
     """
     Devuelve una lista con índices de todas las imágenes PNG del storm_id
     para poder accederlas individualmente.
+    ¡ARREGLADO! Ahora busca en TODOS los directorios de esa fecha.
     """
-    base_path = str(DATA_DIR.resolve())
-    search_pattern = os.path.join(base_path, f"**/*{date}*/Mapas/*{storm_id}*.png")
-    map_files = glob.glob(search_pattern, recursive=True)
+    all_dirs = get_all_dirs_by_date(date)
+    if not all_dirs:
+        raise HTTPException(
+            status_code=404, detail=f"No se encontraron datos para la fecha {date}."
+        )
+    
+    all_image_paths = []
+    for dir_path in all_dirs:
+        map_dir = dir_path / "Mapas"
+        if map_dir.exists():
+            all_image_paths.extend(sorted(map_dir.glob(f"*{storm_id}*.png")))
 
-    if not map_files:
+
+    if not all_image_paths:
         raise HTTPException(
             status_code=404,
             detail=f"No se encontraron mapas del storm_id '{storm_id}' para la fecha {date}.",
         )
 
-    map_files = sorted([os.path.normpath(path) for path in map_files])
-
     return {
         "date": date,
         "storm_id": storm_id,
-        "total_images": len(map_files),
+        "total_images": len(all_image_paths),
         "images": [
-            {"index": i, "filename": os.path.basename(path)}
-            for i, path in enumerate(map_files)
+            {"index": i, "filename": path.name}
+            for i, path in enumerate(all_image_paths)
         ],
     }
 
@@ -318,21 +390,30 @@ def get_storm_maps_metadata_by_date(date: str, storm_id: str):
 def get_storm_map_by_date_and_index(date: str, storm_id: str, index: int):
     """
     Devuelve la imagen PNG del storm_id en la posición 'index' para la fecha dada.
+    ¡ARREGLADO! Ahora busca en TODOS los directorios de esa fecha.
     """
-    base_path = str(DATA_DIR.resolve())
-    search_pattern = os.path.join(base_path, f"**/*{date}*/Mapas/*{storm_id}*.png")
-    map_files = sorted(glob.glob(search_pattern, recursive=True))
+    all_dirs = get_all_dirs_by_date(date)
+    if not all_dirs:
+        raise HTTPException(
+            status_code=404, detail=f"No se encontraron datos para la fecha {date}."
+        )
+    
+    all_image_paths = []
+    for dir_path in all_dirs:
+        map_dir = dir_path / "Mapas"
+        if map_dir.exists():
+            all_image_paths.extend(sorted(map_dir.glob(f"*{storm_id}*.png")))
 
-    if not map_files:
+    if not all_image_paths:
         raise HTTPException(
             status_code=404,
             detail=f"No se encontraron mapas del storm_id '{storm_id}' para la fecha {date}.",
         )
 
-    if index < 0 or index >= len(map_files):
+    if index < 0 or index >= len(all_image_paths):
         raise HTTPException(
             status_code=404,
-            detail=f"Índice {index} fuera de rango. Total de imágenes: {len(map_files)}",
+            detail=f"Índice {index} fuera de rango. Total de imágenes: {len(all_image_paths)}",
         )
 
-    return FileResponse(map_files[index], media_type="image/png")
+    return FileResponse(all_image_paths[index], media_type="image/png")
