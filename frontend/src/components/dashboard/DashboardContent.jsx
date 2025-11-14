@@ -530,16 +530,21 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
                 Vista General
               </h3>
               <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  // (Última Lectura) - HARDCODED
-                  setPopupTitle("Datos JSON (Hardcoded)")
-                  setPopupContent({
-                    view: "GENERAL_LATEST",
-                    note: "DATOS HARDCODED ",
-                    status: "waiting_backend_implementation"
-                  })
-                  setShowInfo(true)
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  try {
+                    const res = await fetch("http://localhost:8000/api/storms");
+                    const data = await res.json();
+
+                    setPopupTitle("Datos JSON - Vista General");
+                    setPopupContent(data);
+                    setShowInfo(true);
+                  } catch (error) {
+                    console.error(error);
+                    setPopupTitle("Error al cargar JSON");
+                    setPopupContent({ error: "No se pudo obtener el JSON general." });
+                    setShowInfo(true);
+                  }
                 }}
                 className="mt-2 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 px-2 py-1 rounded-lg text-xs transition-all"
               >
@@ -588,17 +593,21 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
                     Categoría {category}
                   </p>
                   <button
-                    onClick={(e) => {
+                    onClick={async (e) => {
                       e.stopPropagation()
-                      // (Última Lectura) - HARDCODED
-                      setPopupTitle("Datos JSON (Hardcoded)")
-                      setPopupContent({
-                        view: "SPECIFIC_STORM_LATEST",
-                        stormId: storm.id,
-                        note: "DATOS HARDCODED - Esta funcionalidad la hará otra compañera",
-                        status: "waiting_backend_implementation"
-                      })
-                      setShowInfo(true)
+                      try {
+                        const res = await fetch(`http://localhost:8000/api/storms/${storm.id}`)
+                        const data = await res.json()
+
+                        setPopupTitle(`Datos JSON - Tormenta ${storm.id}`)
+                        setPopupContent(data)
+                        setShowInfo(true)
+                      } catch (error) {
+                        console.error(error)
+                        setPopupTitle("Error al cargar JSON")
+                        setPopupContent({ error: `No se pudo obtener el JSON de la tormenta ${storm.id}.` })
+                        setShowInfo(true)
+                      }
                     }}
                     className="mt-2 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 px-2 py-1 rounded-lg text-xs transition-all"
                   >
