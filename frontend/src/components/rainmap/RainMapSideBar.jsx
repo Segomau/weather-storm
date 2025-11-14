@@ -6,6 +6,7 @@ export default function RainmapSidebar({
   setSelectedCity,
   weatherData,
   setWeatherData,
+  onToggleSidebar,
 }) {
   const API_BASE_URL = "http://localhost:8000/rainmap"
 
@@ -42,30 +43,33 @@ export default function RainmapSidebar({
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
-  const handleCitySelect = async (city) => {
-    setSelectedCity(city)
-    setSearchQuery(city.name)
-    setShowSuggestions(false)
+const handleCitySelect = async (city) => {
+  setSelectedCity(city)
+  setSearchQuery(city.name)
+  setShowSuggestions(false)
 
-    try {
-      const res = await fetch(`${API_BASE_URL}/city?selectedCity=${city.name}`)
-      if (!res.ok) throw new Error("Error fetching city data")
+  // 🔥 CERRAR SIDEBAR EN MÓVIL
+  if (onToggleSidebar) onToggleSidebar()
 
-      const data = await res.json()
+  try {
+    const res = await fetch(`${API_BASE_URL}/city?selectedCity=${city.name}`)
+    if (!res.ok) throw new Error("Error fetching city data")
 
-      setWeatherData({
-        city: city.name,
-        state: city.state,
-        precipitation: data.precipitation,
-        lastUpdate: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      })
-    } catch (err) {
-      console.error("❌ Error loading city data:", err)
-    }
+    const data = await res.json()
+
+    setWeatherData({
+      city: city.name,
+      state: city.state,
+      precipitation: data.precipitation,
+      lastUpdate: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    })
+  } catch (err) {
+    console.error("❌ Error loading city data:", err)
   }
+}
 
   // NEW HIGH-CONTRAST COLOR MAP usando colores rainmap
   const getWeatherGlow = (p) => {
@@ -81,7 +85,36 @@ export default function RainmapSidebar({
     : "border-rainmap-accent/40"
 
   return (
-    <aside className="h-full bg-rainmap-bg/80 backdrop-blur-2xl border-l border-rainmap-glass-border flex flex-col shadow-[0_0_30px_rgba(0,255,120,0.08)]">
+   <aside className="
+  h-full 
+  bg-rainmap-bg/80 
+  backdrop-blur-2xl 
+  border-l border-rainmap-glass-border 
+  flex flex-col 
+  shadow-[0_0_30px_rgba(0,255,120,0.08)]
+  relative
+">
+
+
+{/* Close button (mobile only) */}
+<button
+  onClick={onToggleSidebar}
+  className="
+    absolute top-3 right-3
+    md:hidden
+    p-2 rounded-lg
+    bg-rainmap-glass
+    border border-rainmap-glass-border
+    text-rainmap-contrast
+    backdrop-blur-xl
+    hover:bg-rainmap-accent2/20
+    transition
+    z-50
+  "
+>
+  ✕
+</button>
+
 
       {/* TOP SWITCH */}
       <div className="sticky top-0 p-3 border-b border-rainmap-glass-border flex gap-2 backdrop-blur-2xl bg-rainmap-surface z-10 rounded-b-2xl">

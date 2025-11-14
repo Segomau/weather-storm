@@ -98,7 +98,8 @@ export default function DashboardSidebar({ view, setView, mainStormView, activeS
   const warningStorms = activeStorms.filter((s) => s.status === "warning" || s.estado === "warning").length
 
   return (
-    <aside className="h-full bg-rainmap-bg/80 backdrop-blur-2xl border-l border-rainmap-glass-border flex flex-col shadow-[0_0_30px_rgba(0,255,120,0.08)]">
+    <aside className="w-80 h-full bg-rainmap-bg/80 backdrop-blur-2xl border-l border-rainmap-glass-border flex flex-col shadow-[0_0_30px_rgba(0,255,120,0.08)]">
+
 
       {/* TOP SWITCH */}
       <div className="sticky top-0 p-3 border-b border-rainmap-glass-border flex gap-2 backdrop-blur-2xl bg-rainmap-surface z-10 rounded-b-2xl">
