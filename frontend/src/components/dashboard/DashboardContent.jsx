@@ -4,8 +4,7 @@ import { MapPin, Wind, AlertTriangle, Loader, ChevronLeft, ChevronRight, Tornado
 const API_BASE_URL = "http://localhost:8000"
 
 // ============================================
-// NUEVO: Popup para mostrar JSON (con
-//        manejo de carga y error)
+// NUEVO: Popup para mostrar JSON
 // ============================================
 function InfoPopup({ isOpen, onClose, title, content, isLoading, error }) {
   if (!isOpen) return null
@@ -13,23 +12,23 @@ function InfoPopup({ isOpen, onClose, title, content, isLoading, error }) {
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50" onClick={onClose}>
       <div
-        className="bg-[#024b58] text-[#EAF6F6] rounded-xl p-6 w-[90%] max-w-lg shadow-xl relative"
+        className="bg-rainmap-surface backdrop-blur-xl border border-rainmap-glass-border rounded-2xl p-6 w-[90%] max-w-lg shadow-[0_8px_30px_rgba(0,0,0,0.25)] relative"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-xl font-bold mb-3">{title}</h2>
-        
+        <h2 className="text-xl font-bold text-rainmap-contrast mb-3">{title}</h2>
+
         {/* Contenido del Popup */}
-        <div className="bg-black/30 p-3 rounded-lg overflow-auto max-h-[60vh]">
+        <div className="bg-rainmap-bg p-4 rounded-xl border border-rainmap-glass-border overflow-auto max-h-[60vh]">
           {isLoading ? (
             <div className="flex items-center justify-center h-24">
-              <Loader className="w-8 h-8 text-cyan-400 animate-spin" />
+              <Loader className="w-8 h-8 text-rainmap-accent2 animate-spin" />
             </div>
           ) : error ? (
-            <pre className="text-xs text-red-400 whitespace-pre-wrap">
+            <pre className="text-xs text-rainmap-danger whitespace-pre-wrap">
               Error al cargar datos: {error}
             </pre>
           ) : (
-            <pre className="text-xs text-[#B2D8D8] whitespace-pre-wrap">
+            <pre className="text-xs text-rainmap-muted whitespace-pre-wrap">
               {content ? JSON.stringify(content, null, 2) : "No hay datos disponibles."}
             </pre>
           )}
@@ -37,7 +36,7 @@ function InfoPopup({ isOpen, onClose, title, content, isLoading, error }) {
 
         <button
           onClick={onClose}
-          className="absolute top-2 right-2 text-cyan-300 hover:text-cyan-100 text-xl font-bold w-8 h-8 flex items-center justify-center"
+          className="absolute top-3 right-3 text-rainmap-muted hover:text-rainmap-contrast transition-colors w-8 h-8 flex items-center justify-center rounded-lg hover:bg-rainmap-glass"
         >
           ✖
         </button>
@@ -63,33 +62,31 @@ function ImageCarousel({ images, title }) {
     setImageLoading(true)
   }
 
-  // EFECTO 1: Cuando el array de imágenes cambia, resetea el carrusel
   useEffect(() => {
     setImageLoading(true)
-    // Reset index if images array changes
     setCurrentIndex(0)
   }, [images])
 
   if (!images || images.length === 0) {
     return (
       <div className="text-center py-8">
-        <MapPin className="w-12 h-12 text-slate-500 mx-auto mb-2 opacity-30" />
-        <p className="text-[#B2D8D8]">No hay imágenes disponibles</p>
+        <MapPin className="w-12 h-12 text-rainmap-muted/30 mx-auto mb-2" />
+        <p className="text-rainmap-muted">No hay imágenes disponibles</p>
       </div>
     )
   }
 
   return (
     <div className="relative">
-      <div className="relative bg-[#013f4e] rounded-lg overflow-hidden min-h-[250px] md:min-h-[400px] flex items-center justify-center">
+      <div className="relative bg-rainmap-glass backdrop-blur-xl rounded-2xl border border-rainmap-glass-border overflow-hidden min-h-[250px] md:min-h-[400px] flex items-center justify-center">
         {imageLoading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-[#013f4e] z-10">
-            <Loader className="w-8 h-8 text-cyan-400 animate-spin" />
+          <div className="absolute inset-0 flex items-center justify-center bg-rainmap-glass z-10">
+            <Loader className="w-8 h-8 text-rainmap-accent2 animate-spin" />
           </div>
         )}
 
         <img
-          key={images[currentIndex]} // <!-- ✨ ¡ESTA ES LA MAGIA! ✨
+          key={images[currentIndex]}
           src={images[currentIndex]}
           alt={`${title} - Imagen ${currentIndex + 1}`}
           className="w-full h-auto max-h-[600px] object-contain"
@@ -104,26 +101,25 @@ function ImageCarousel({ images, title }) {
           <>
             <button
               onClick={prevImage}
-              className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/70 hover:bg-black/90 text-white p-3 rounded-full transition-all z-20 hover:scale-110"
+              className="absolute left-3 top-1/2 -translate-y-1/2 bg-rainmap-surface/80 hover:bg-rainmap-surface text-rainmap-contrast p-3 rounded-full border border-rainmap-glass-border transition-all z-20 hover:scale-110 backdrop-blur-sm"
               aria-label="Imagen anterior"
             >
-              <ChevronLeft className="w-6 h-6" />
+              <ChevronLeft className="w-5 h-5" />
             </button>
 
             <button
               onClick={nextImage}
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/70 hover:bg-black/90 text-white p-3 rounded-full transition-all z-20 hover:scale-110"
+              className="absolute right-3 top-1/2 -translate-y-1/2 bg-rainmap-surface/80 hover:bg-rainmap-surface text-rainmap-contrast p-3 rounded-full border border-rainmap-glass-border transition-all z-20 hover:scale-110 backdrop-blur-sm"
               aria-label="Imagen siguiente"
             >
-              <ChevronRight className="w-6 h-6" />
+              <ChevronRight className="w-5 h-5" />
             </button>
           </>
         )}
 
-        {/* Indicador de posición solo si hay imágenes */}
         {images.length > 0 && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/80 px-4 py-2 rounded-full z-20">
-            <span className="text-white text-sm font-medium">
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-rainmap-surface/80 backdrop-blur-sm px-4 py-2 rounded-full border border-rainmap-glass-border z-20">
+            <span className="text-rainmap-contrast text-sm font-medium">
               {currentIndex + 1} / {images.length}
             </span>
           </div>
@@ -139,9 +135,9 @@ function ImageCarousel({ images, title }) {
                 setCurrentIndex(idx)
                 setImageLoading(true)
               }}
-              className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${idx === currentIndex
-                  ? "border-cyan-400 scale-110 shadow-lg shadow-cyan-400/50"
-                  : "border-white/20 opacity-60 hover:opacity-100 hover:border-cyan-400/50"
+              className={`flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 transition-all ${idx === currentIndex
+                ? "border-rainmap-accent2 shadow-lg shadow-rainmap-accent2/50"
+                : "border-rainmap-glass-border opacity-60 hover:opacity-100 hover:border-rainmap-accent2/50"
                 }`}
             >
               <img
@@ -165,8 +161,8 @@ function ImageCarousel({ images, title }) {
                 setImageLoading(true)
               }}
               className={`w-3 h-3 rounded-full transition-all ${idx === currentIndex
-                  ? "bg-cyan-400 scale-125"
-                  : "bg-white/30 hover:bg-white/60"
+                ? "bg-rainmap-accent2 scale-125"
+                : "bg-rainmap-muted/30 hover:bg-rainmap-muted/60"
                 }`}
               aria-label={`Ir a imagen ${idx + 1}`}
             />
@@ -194,8 +190,6 @@ function GeneralMapCarousel({ latestDate }) {
         setError(null)
         setImages([])
 
-        console.log(`Cargando mapas generales para fecha: ${latestDate}`)
-
         const listResponse = await fetch(`${API_BASE_URL}/api/date/${latestDate}/maps/general/list`)
 
         if (!listResponse.ok) {
@@ -203,13 +197,10 @@ function GeneralMapCarousel({ latestDate }) {
         }
 
         const listData = await listResponse.json()
-        console.log("Lista de mapas generales:", listData)
-
         const imageUrls = listData.images.map(img =>
           `${API_BASE_URL}/api/date/${latestDate}/maps/general/${img.index}?v=${latestDate}`
         )
 
-        console.log(`${imageUrls.length} imágenes generales cargadas`)
         setImages(imageUrls)
 
       } catch (err) {
@@ -226,7 +217,7 @@ function GeneralMapCarousel({ latestDate }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader className="w-12 h-12 text-cyan-400 animate-spin" />
+        <Loader className="w-12 h-12 text-rainmap-accent2 animate-spin" />
       </div>
     )
   }
@@ -234,8 +225,8 @@ function GeneralMapCarousel({ latestDate }) {
   if (error) {
     return (
       <div className="text-center py-8">
-        <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-2" />
-        <p className="text-red-400">{error}</p>
+        <AlertTriangle className="w-12 h-12 text-rainmap-danger mx-auto mb-2" />
+        <p className="text-rainmap-danger">{error}</p>
       </div>
     )
   }
@@ -261,8 +252,6 @@ function StormMapCarousel({ stormId, latestDate }) {
         setImages([])
 
         if (latestDate) {
-          console.log(`📅 HISTÓRICO: Cargando mapas para tormenta: ${stormId}, fecha: ${latestDate}`)
-
           const listResponse = await fetch(`${API_BASE_URL}/api/date/${latestDate}/maps/${stormId}/list`)
 
           if (!listResponse.ok) {
@@ -270,17 +259,12 @@ function StormMapCarousel({ stormId, latestDate }) {
           }
 
           const listData = await listResponse.json()
-          console.log(`Lista de mapas para ${stormId}:`, listData)
-
           const imageUrls = listData.images.map(img =>
             `${API_BASE_URL}/api/date/${latestDate}/maps/${stormId}/${img.index}?v=${latestDate}`
           )
 
-          console.log(`✅ ${imageUrls.length} imágenes de ${stormId} cargadas`)
           setImages(imageUrls)
         } else {
-          console.log(`🕐 ÚLTIMA LECTURA: Cargando última imagen para tormenta: ${stormId}`)
-
           const checkResponse = await fetch(`${API_BASE_URL}/api/maps/${stormId}`, { cache: 'no-store' })
 
           if (!checkResponse.ok) {
@@ -288,7 +272,6 @@ function StormMapCarousel({ stormId, latestDate }) {
           }
 
           const imageUrl = `${API_BASE_URL}/api/maps/${stormId}?v=${Date.now()}`
-          console.log(`✅ 1 imagen de ${stormId} cargada (última lectura)`)
           setImages([imageUrl])
         }
 
@@ -306,7 +289,7 @@ function StormMapCarousel({ stormId, latestDate }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader className="w-12 h-12 text-cyan-400 animate-spin" />
+        <Loader className="w-12 h-12 text-rainmap-accent2 animate-spin" />
       </div>
     )
   }
@@ -314,8 +297,8 @@ function StormMapCarousel({ stormId, latestDate }) {
   if (error) {
     return (
       <div className="text-center py-8">
-        <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-2" />
-        <p className="text-red-400">{error}</p>
+        <AlertTriangle className="w-12 h-12 text-rainmap-danger mx-auto mb-2" />
+        <p className="text-rainmap-danger">{error}</p>
       </div>
     )
   }
@@ -361,7 +344,7 @@ function LatestAvailableGeneral() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader className="w-12 h-12 text-cyan-400 animate-spin" />
+        <Loader className="w-12 h-12 text-rainmap-accent2 animate-spin" />
       </div>
     )
   }
@@ -369,8 +352,8 @@ function LatestAvailableGeneral() {
   if (error) {
     return (
       <div className="text-center py-8">
-        <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-2" />
-        <p className="text-red-400">{error}</p>
+        <AlertTriangle className="w-12 h-12 text-rainmap-danger mx-auto mb-2" />
+        <p className="text-rainmap-danger">{error}</p>
       </div>
     )
   }
@@ -378,17 +361,17 @@ function LatestAvailableGeneral() {
   if (!imageUrl) {
     return (
       <div className="text-center py-8">
-        <MapPin className="w-12 h-12 text-slate-500 mx-auto mb-2 opacity-30" />
-        <p className="text-[#B2D8D8]">No hay mapa disponible</p>
+        <MapPin className="w-12 h-12 text-rainmap-muted/30 mx-auto mb-2" />
+        <p className="text-rainmap-muted">No hay mapa disponible</p>
       </div>
     )
   }
 
   return (
-    <div className="relative bg-[#013f4e] rounded-lg overflow-hidden min-h-[250px] md:min-h-[400px] flex items-center justify-center">
+    <div className="relative bg-rainmap-glass backdrop-blur-xl rounded-2xl border border-rainmap-glass-border overflow-hidden min-h-[250px] md:min-h-[400px] flex items-center justify-center">
       {imageLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-[#013f4e] z-10">
-          <Loader className="w-8 h-8 text-cyan-400 animate-spin" />
+        <div className="absolute inset-0 flex items-center justify-center bg-rainmap-glass z-10">
+          <Loader className="w-8 h-8 text-rainmap-accent2 animate-spin" />
         </div>
       )}
 
@@ -422,8 +405,6 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
     return "bg-green-500"
   }
 
-  // --- NUEVA FUNCIÓN ---
-  // Limpia el estado del popup y lo cierra
   const closePopup = () => {
     setShowInfo(false)
     setPopupContent(null)
@@ -431,10 +412,7 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
     setIsPopupLoading(false)
   }
 
-  // --- NUEVA FUNCIÓN ---
-  // Maneja el click en los botones JSON del MODO HISTÓRICO
   const handleHistoricJsonClick = async (storm = null) => {
-    // 1. Mostrar el popup en modo "Cargando"
     setShowInfo(true)
     setIsPopupLoading(true)
     setPopupError(null)
@@ -442,16 +420,13 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
 
     let url = ""
     if (storm) {
-      // Es una tormenta específica
       setPopupTitle(`Datos JSON: ${storm.nombre || storm.id}`)
       url = `${API_BASE_URL}/api/date/${latestDate}/storms/${storm.id}`
     } else {
-      // Es la vista general
       setPopupTitle(`Datos JSON: Vista General (${latestDate})`)
       url = `${API_BASE_URL}/api/date/${latestDate}/storms`
     }
 
-    // 2. Hacer el fetch
     try {
       const response = await fetch(url)
       if (!response.ok) {
@@ -459,27 +434,22 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
         throw new Error(errorData.detail || `Error ${response.status}`)
       }
       const data = await response.json()
-      
-      // 3. Mostrar los datos
       setPopupContent(data)
-      
+
     } catch (err) {
-      // 4. Mostrar el error
       console.error("Error fetching JSON:", err)
       setPopupError(err.message)
     } finally {
-      // 5. Dejar de cargar
       setIsPopupLoading(false)
     }
   }
 
-
   if (loading) {
     return (
-      <section className="flex-1 overflow-y-auto p-6 md:p-8 bg-[#013f4e] flex items-center justify-center">
+      <section className="flex-1 overflow-y-auto p-6 md:p-8 bg-rainmap-bg flex items-center justify-center">
         <div className="text-center">
-          <Loader className="w-12 h-12 text-cyan-400 animate-spin mx-auto mb-4" />
-          <p className="text-[#B2D8D8]">Cargando datos de tormentas...</p>
+          <Loader className="w-12 h-12 text-rainmap-accent2 animate-spin mx-auto mb-4" />
+          <p className="text-rainmap-muted">Cargando datos de tormentas...</p>
         </div>
       </section>
     )
@@ -487,46 +457,53 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
 
   if (error) {
     return (
-      <section className="flex-1 overflow-y-auto p-6 md:p-8 bg-[#013f4e] flex items-center justify-center">
+      <section className="flex-1 overflow-y-auto p-6 md:p-8 bg-rainmap-bg flex items-center justify-center">
         <div className="text-center">
-          <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-4" />
-          <p className="text-red-400 mb-2">Error al cargar datos</p>
-          <p className="text-[#B2D8D8] text-sm">{error}</p>
+          <AlertTriangle className="w-12 h-12 text-rainmap-danger mx-auto mb-4" />
+          <p className="text-rainmap-danger mb-2">Error al cargar datos</p>
+          <p className="text-rainmap-muted text-sm">{error}</p>
         </div>
       </section>
     )
   }
 
   // VISTA #1: ÚLTIMA LECTURA (sin fecha seleccionada)
-  // (Los botones JSON aquí siguen siendo HARDCODED)
   if (!latestDate) {
     return (
-      <section className="flex-1 overflow-y-auto p-6 md:p-8 bg-[#013f4e]">
+      <section className="flex-1 overflow-y-auto p-6 md:p-8 bg-rainmap-bg">
         <div className="mb-6">
-          <h1 className="text-3xl md:text-4xl font-bold text-[#EAF6F6] mb-2 drop-shadow-lg">
+          <h1 className="text-3xl md:text-4xl font-bold text-rainmap-contrast mb-2">
             {mainStormView ? mainStormView.nombre || mainStormView.name : "Última Lectura General"}
           </h1>
-          <p className="text-[#B2D8D8] text-sm">
+          <p className="text-rainmap-muted text-sm">
             {mainStormView ? `ID: ${mainStormView.id}` : "Mostrando el mapa general y tormentas más recientes."}
           </p>
         </div>
-        
-        {/* --- INICIO DE LA CORRECCIÓN --- */}
-        {/* Este grid ahora SIEMPRE es visible */}
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <button
             onClick={() => setMainStormView(null)}
-            className={`bg-[#024b58]/80 backdrop-blur-xl rounded-[14px] border transition-all duration-300 overflow-hidden text-left group hover:scale-[1.02] ${!mainStormView
-                ? "border-cyan-400/40 shadow-lg shadow-cyan-400/25"
-                : "border-white/10 hover:border-cyan-400/30 shadow-lg hover:shadow-cyan-400/15"
+            className={`bg-rainmap-glass backdrop-blur-xl rounded-2xl border transition-all duration-300 overflow-hidden text-left group hover:scale-[1.02] ${!mainStormView
+              ? "border-rainmap-accent2/40 shadow-lg shadow-rainmap-accent2/25"
+              : "border-rainmap-glass-border hover:border-rainmap-accent2/30 shadow-lg hover:shadow-rainmap-accent2/15"
               }`}
           >
             <div className="h-1 bg-gradient-to-r from-green-500/50 to-emerald-500/50" />
-            <div className="relative aspect-[4/3] flex items-center justify-center">
-              <Tornado className="w-12 h-12 text-cyan-400 opacity-50" />
+            <div className="relative aspect-[4/3] flex items-center justify-center bg-rainmap-surface">
+              {/* Preview de la imagen general */}
+              <img
+                src={`${API_BASE_URL}/api/maps?v=${Date.now()}`}
+                alt="Vista General Preview"
+                className="w-full h-full object-cover"
+                loading="lazy"
+                onError={(e) => {
+                  e.target.style.display = 'none'
+                  e.target.nextSibling.style.display = 'flex'
+                }}
+              />
             </div>
-            <div className="p-3">
-              <h3 className="text-sm font-bold text-[#EAF6F6] group-hover:text-cyan-300 transition-colors">
+            <div className="p-4">
+              <h3 className="text-sm font-bold text-rainmap-contrast group-hover:text-rainmap-accent2 transition-colors">
                 Vista General
               </h3>
               <button
@@ -546,14 +523,13 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
                     setShowInfo(true);
                   }
                 }}
-                className="mt-2 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 px-2 py-1 rounded-lg text-xs transition-all"
+                className="mt-2 bg-rainmap-accent2/20 hover:bg-rainmap-accent2/30 text-rainmap-accent2 px-3 py-1 rounded-lg text-xs transition-all border border-rainmap-accent2/20"
               >
                 JSON
               </button>
             </div>
           </button>
 
-          {/* Mapeamos las tormentas aquí */}
           {activeStorms.map((storm) => {
             const isSelected = mainStormView?.id === storm.id
             const category = storm.categoria || storm.category || 1
@@ -562,13 +538,13 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
               <button
                 key={storm.id}
                 onClick={() => setMainStormView(storm)}
-                className={`bg-[#024b58]/80 rounded-[14px] border transition-all duration-300 overflow-hidden text-left group hover:scale-[1.02] ${isSelected
-                    ? "border-cyan-400/40 shadow-lg shadow-cyan-400/25"
-                    : "border-white/10 hover:border-cyan-400/30 shadow-lg hover:shadow-cyan-400/15"
+                className={`bg-rainmap-glass backdrop-blur-xl rounded-2xl border transition-all duration-300 overflow-hidden text-left group hover:scale-[1.02] ${isSelected
+                  ? "border-rainmap-accent2/40 shadow-lg shadow-rainmap-accent2/25"
+                  : "border-rainmap-glass-border hover:border-rainmap-accent2/30 shadow-lg hover:shadow-rainmap-accent2/15"
                   }`}
               >
                 <div className={`h-1 ${dangerColor}`} />
-                <div className="relative aspect-[4/3] flex items-center justify-center bg-[#013f4e]">
+                <div className="relative aspect-[4/3] flex items-center justify-center bg-rainmap-surface">
                   {storm.imageUrl && !storm.invest ? (
                     <img
                       src={storm.imageUrl}
@@ -582,14 +558,14 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
                     />
                   ) : null}
                   <div className={storm.imageUrl && !storm.invest ? "hidden" : "flex"} style={{ position: 'absolute', inset: 0, alignItems: 'center', justifyContent: 'center' }}>
-                    <Wind className="w-12 h-12 text-cyan-400 opacity-40" />
+                    <Wind className="w-12 h-12 text-rainmap-accent2/40" />
                   </div>
                 </div>
-                <div className="p-3">
-                  <h3 className="text-sm font-bold text-[#EAF6F6] group-hover:text-cyan-300 transition-colors">
+                <div className="p-4">
+                  <h3 className="text-sm font-bold text-rainmap-contrast group-hover:text-rainmap-accent2 transition-colors">
                     {storm.nombre || storm.name || `Tormenta ${storm.id}`}
                   </h3>
-                  <p className="text-xs text-[#B2D8D8] mt-1">
+                  <p className="text-xs text-rainmap-muted mt-1">
                     Categoría {category}
                   </p>
                   <button
@@ -609,7 +585,7 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
                         setShowInfo(true)
                       }
                     }}
-                    className="mt-2 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 px-2 py-1 rounded-lg text-xs transition-all"
+                    className="mt-2 bg-rainmap-accent2/20 hover:bg-rainmap-accent2/30 text-rainmap-accent2 px-3 py-1 rounded-lg text-xs transition-all border border-rainmap-accent2/20"
                   >
                     JSON
                   </button>
@@ -619,19 +595,17 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
           })}
         </div>
 
-        {/* El mensaje de "No hay tormentas" solo aparece si es 0 */}
         {activeStorms.length === 0 && (
-          <div className="bg-[#024b58]/80 backdrop-blur-xl rounded-[14px] border border-white/10 p-12 text-center mb-6">
-            <Wind className="w-16 h-16 text-slate-500 mx-auto mb-4 opacity-30" />
-            <h3 className="text-xl font-bold text-[#EAF6F6] mb-2">No hay tormentas activas</h3>
-            <p className="text-[#B2D8D8]">No se detectan tormentas tropicales en la última lectura.</p>
+          <div className="bg-rainmap-glass backdrop-blur-xl rounded-2xl border border-rainmap-glass-border p-12 text-center mb-6">
+            <Wind className="w-16 h-16 text-rainmap-muted/30 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-rainmap-contrast mb-2">No hay tormentas activas</h3>
+            <p className="text-rainmap-muted">No se detectan tormentas tropicales en la última lectura.</p>
           </div>
         )}
 
-        {/* El carrusel ahora va después y SIEMPRE es visible */}
-        <div className="bg-[#024b58]/80 backdrop-blur-xl rounded-[14px] border border-white/10 overflow-hidden">
-          <div className="p-4 border-b border-white/10">
-            <h2 className="text-xl font-bold text-[#EAF6F6]">
+        <div className="bg-rainmap-glass backdrop-blur-xl rounded-2xl border border-rainmap-glass-border overflow-hidden">
+          <div className="p-4 border-b border-rainmap-glass-border">
+            <h2 className="text-xl font-bold text-rainmap-contrast">
               {
                 !mainStormView
                   ? "Mapa General (Última Lectura)"
@@ -649,9 +623,9 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
               )
                 : mainStormView.invest ? (
                   <div className="text-center py-8">
-                    <Wind className="w-12 h-12 text-slate-500 mx-auto mb-2 opacity-30" />
-                    <h3 className="text-lg font-bold text-[#EAF6F6]">Investigación Activa</h3>
-                    <p className="text-[#B2D8D8]">No hay mapas individuales para esta área.</p>
+                    <Wind className="w-12 h-12 text-rainmap-muted/30 mx-auto mb-2" />
+                    <h3 className="text-lg font-bold text-rainmap-contrast">Investigación Activa</h3>
+                    <p className="text-rainmap-muted">No hay mapas individuales para esta área.</p>
                   </div>
                 )
                   : (
@@ -663,73 +637,76 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
             }
           </div>
         </div>
-        {/* --- FIN DE LA CORRECCIÓN --- */}
 
-        {/* El Popup para la VISTA #1 */}
         <InfoPopup
           isOpen={showInfo}
           onClose={closePopup}
           title={popupTitle}
           content={popupContent}
-          isLoading={isPopupLoading} // Siempre será false aquí
-          error={popupError}       // Siempre será null aquí
+          isLoading={isPopupLoading}
+          error={popupError}
         />
       </section>
     )
   }
 
   // VISTA #2: HISTÓRICO (con fecha seleccionada)
-  // (Los botones JSON aquí SÍ HACEN FETCH)
   return (
-    <section className="flex-1 overflow-y-auto hide-scrollbar p-6 md:p-8 bg-[#013f4e]">
+    <section className="flex-1 overflow-y-auto p-6 md:p-8 bg-rainmap-bg">
       <div className="mb-6">
-        <h1 className="text-3xl md:text-4xl font-bold text-[#EAF6F6] mb-2 drop-shadow-lg">
+        <h1 className="text-3xl md:text-4xl font-bold text-rainmap-contrast mb-2">
           {mainStormView ? mainStormView.nombre || mainStormView.name : "Vista General de Tormentas"}
         </h1>
-        <p className="text-[#B2D8D8] text-sm">
+        <p className="text-rainmap-muted text-sm">
           {mainStormView
             ? `${mainStormView.ubicacion || mainStormView.location || 'Sin ubicación'}`
             : "Monitoreo en tiempo real de tormentas tropicales"}
         </p>
         {latestDate && (
-          <p className="text-[#B2D8D8] text-xs mt-1">
-            Datos para la fecha: {latestDate}
+          <p className="text-rainmap-muted text-xs mt-1">
+            Datos para la fecha: {latestDate ? `${latestDate.substring(6, 8)}/${latestDate.substring(4, 6)}/${latestDate.substring(0, 4)}` : ''}
           </p>
         )}
       </div>
 
-      {/* --- INICIO DE LA CORRECCIÓN --- */}
-      {/* Este grid ahora SIEMPRE es visible */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <button
           onClick={() => setMainStormView(null)}
-          className={`bg-[#024b58]/80 backdrop-blur-xl rounded-[14px] border transition-all duration-300 overflow-hidden text-left group hover:scale-[1.02] ${!mainStormView
-              ? "border-cyan-400/40 shadow-lg shadow-cyan-400/25"
-              : "border-white/10 hover:border-cyan-400/30 shadow-lg hover:shadow-cyan-400/15"
+          className={`bg-rainmap-glass backdrop-blur-xl rounded-2xl border transition-all duration-300 overflow-hidden text-left group hover:scale-[1.02] ${!mainStormView
+            ? "border-rainmap-accent2/40 shadow-lg shadow-rainmap-accent2/25"
+            : "border-rainmap-glass-border hover:border-rainmap-accent2/30 shadow-lg hover:shadow-rainmap-accent2/15"
             }`}
         >
           <div className="h-1 bg-gradient-to-r from-green-500/50 to-emerald-500/50" />
           <div className="relative aspect-[4/3] flex items-center justify-center">
-            <Tornado className="w-12 h-12 text-cyan-400 opacity-50" />
+            {/* Preview de la imagen general */}
+            <img
+              src={`${API_BASE_URL}/api/maps?v=${Date.now()}`}
+              alt="Vista General Preview"
+              className="w-full h-full object-cover"
+              loading="lazy"
+              onError={(e) => {
+                e.target.style.display = 'none'
+                e.target.nextSibling.style.display = 'flex'
+              }}
+            />
           </div>
-          <div className="p-3">
-            <h3 className="text-sm font-bold text-[#EAF6F6] group-hover:text-cyan-300 transition-colors">
+          <div className="p-4">
+            <h3 className="text-sm font-bold text-rainmap-contrast group-hover:text-rainmap-accent2 transition-colors">
               Vista General
             </h3>
             <button
               onClick={(e) => {
                 e.stopPropagation()
-                // (Histórico) - HACE FETCH
                 handleHistoricJsonClick(null)
               }}
-              className="mt-2 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 px-2 py-1 rounded-lg text-xs transition-all"
+              className="mt-2 bg-rainmap-accent2/20 hover:bg-rainmap-accent2/30 text-rainmap-accent2 px-3 py-1 rounded-lg text-xs transition-all border border-rainmap-accent2/20"
             >
               JSON
             </button>
           </div>
         </button>
 
-        {/* Mapeamos las tormentas (si hay) */}
         {activeStorms.map((storm) => {
           const isSelected = mainStormView?.id === storm.id
           const category = storm.categoria || storm.category || 1
@@ -739,13 +716,13 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
             <button
               key={storm.id}
               onClick={() => setMainStormView(storm)}
-              className={`bg-[#024b58]/80 rounded-[14px] border transition-all duration-300 overflow-hidden text-left group hover:scale-[1.02] ${isSelected
-                  ? "border-cyan-400/40 shadow-lg shadow-cyan-400/25"
-                  : "border-white/10 hover:border-cyan-400/30 shadow-lg hover:shadow-cyan-400/15"
+              className={`bg-rainmap-glass backdrop-blur-xl rounded-2xl border transition-all duration-300 overflow-hidden text-left group hover:scale-[1.02] ${isSelected
+                ? "border-rainmap-accent2/40 shadow-lg shadow-rainmap-accent2/25"
+                : "border-rainmap-glass-border hover:border-rainmap-accent2/30 shadow-lg hover:shadow-rainmap-accent2/15"
                 }`}
             >
               <div className={`h-1 ${dangerColor}`} />
-              <div className="relative aspect-[4/3] flex items-center justify-center bg-[#013f4e]">
+              <div className="relative aspect-[4/3] flex items-center justify-center bg-rainmap-surface">
                 {storm.imageUrl && !storm.invest ? (
                   <img
                     src={storm.imageUrl}
@@ -760,23 +737,22 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
                 ) : null}
 
                 <div className={storm.imageUrl && !storm.invest ? "hidden" : "flex"} style={{ position: 'absolute', inset: 0, alignItems: 'center', justifyContent: 'center' }}>
-                  <Wind className="w-12 h-12 text-cyan-400 opacity-40" />
+                  <Wind className="w-12 h-12 text-rainmap-accent2/40" />
                 </div>
               </div>
-              <div className="p-3">
-                <h3 className="text-sm font-bold text-[#EAF6F6] group-hover:text-cyan-300 transition-colors">
+              <div className="p-4">
+                <h3 className="text-sm font-bold text-rainmap-contrast group-hover:text-rainmap-accent2 transition-colors">
                   {storm.nombre || storm.name || `Tormenta ${storm.id}`}
                 </h3>
-                <p className="text-xs text-[#B2D8D8] mt-1">
+                <p className="text-xs text-rainmap-muted mt-1">
                   Categoría {category}
                 </p>
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
-                    // (Histórico) - HACE FETCH
                     handleHistoricJsonClick(storm)
                   }}
-                  className="mt-2 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 px-2 py-1 rounded-lg text-xs transition-all"
+                  className="mt-2 bg-rainmap-accent2/20 hover:bg-rainmap-accent2/30 text-rainmap-accent2 px-3 py-1 rounded-lg text-xs transition-all border border-rainmap-accent2/20"
                 >
                   JSON
                 </button>
@@ -786,20 +762,17 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
         })}
       </div>
 
-      {/* El mensaje de "No hay tormentas" solo aparece si es 0 */}
       {activeStorms.length === 0 && (
-        <div className="bg-[#024b58]/80 backdrop-blur-xl rounded-[14px] border border-white/10 p-12 text-center mb-6">
-          <Wind className="w-16 h-16 text-slate-500 mx-auto mb-4 opacity-30" />
-          <h3 className="text-xl font-bold text-[#EAF6F6] mb-2">No hay tormentas activas</h3>
-          <p className="text-[#B2D8D8]">No se detectan tormentas tropicales para la fecha seleccionada.</p>
+        <div className="bg-rainmap-glass backdrop-blur-xl rounded-2xl border border-rainmap-glass-border p-12 text-center mb-6">
+          <Wind className="w-16 h-16 text-rainmap-muted/30 mx-auto mb-4" />
+          <h3 className="text-xl font-bold text-rainmap-contrast mb-2">No hay tormentas activas</h3>
+          <p className="text-rainmap-muted">No se detectan tormentas tropicales para la fecha seleccionada.</p>
         </div>
       )}
-      {/* --- FIN DE LA CORRECCIÓN --- */}
 
-
-      <div className="bg-[#024b58]/80 backdrop-blur-xl rounded-[14px] border border-white/10 overflow-hidden mt-6">
-        <div className="p-4 border-b border-white/10">
-          <h2 className="text-xl font-bold text-[#EAF6F6]">
+      <div className="bg-rainmap-glass backdrop-blur-xl rounded-2xl border border-rainmap-glass-border overflow-hidden mt-6">
+        <div className="p-4 border-b border-rainmap-glass-border">
+          <h2 className="text-xl font-bold text-rainmap-contrast">
             {
               !mainStormView
                 ? "Mapas Generales de Tormentas"
@@ -809,7 +782,7 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
             }
           </h2>
 
-          <p className="text-sm text-[#B2D8D8] mt-1">
+          <p className="text-sm text-rainmap-muted mt-1">
             {mainStormView
               ? `ID: ${mainStormView.id}`
               : `Todas las actualizaciones del ${latestDate || 'día seleccionado'}`}
@@ -823,9 +796,9 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
             )
               : mainStormView.invest ? (
                 <div className="text-center py-8">
-                  <Wind className="w-12 h-12 text-slate-500 mx-auto mb-2 opacity-30" />
-                  <h3 className="text-lg font-bold text-[#EAF6F6]">Investigación Activa</h3>
-                  <p className="text-[#B2D8D8]">
+                  <Wind className="w-12 h-12 text-rainmap-muted/30 mx-auto mb-2" />
+                  <h3 className="text-lg font-bold text-rainmap-contrast">Investigación Activa</h3>
+                  <p className="text-rainmap-muted">
                     No hay mapas de pronóstico individuales para esta área de investigación.
                   </p>
                 </div>
@@ -840,7 +813,6 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
         </div>
       </div>
 
-      {/* El Popup para la VISTA #2 */}
       <InfoPopup
         isOpen={showInfo}
         onClose={closePopup}

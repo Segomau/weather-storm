@@ -3,8 +3,8 @@ import { MapPin, Wind, ChevronLeft, ChevronRight, MapIcon } from "lucide-react"
 
 function Stat({ label, value }) {
   return (
-    <div className="bg-[#024b58]/60 rounded-xl p-3 border border-white/10 text-[#EAF6F6]">
-      <div className="text-xs text-[#B2D8D8]">{label}</div>
+    <div className="bg-rainmap-glass backdrop-blur-xl rounded-2xl p-4 border border-rainmap-glass-border text-rainmap-contrast">
+      <div className="text-xs text-rainmap-muted">{label}</div>
       <div className="text-xl font-bold">{value}</div>
     </div>
   )
@@ -42,10 +42,10 @@ function Calendar({ activeDate, onDateChange }) {
 
   for (let day = 1; day <= daysInMonth; day++) {
     const currentDate = new Date(year, month, day);
-    const isSelected = selectedDateObj 
-      ? (selectedDateObj.toDateString() === currentDate.toDateString()) 
+    const isSelected = selectedDateObj
+      ? (selectedDateObj.toDateString() === currentDate.toDateString())
       : false;
-    
+
     days.push(
       <button
         key={day}
@@ -54,11 +54,10 @@ function Calendar({ activeDate, onDateChange }) {
           onDateChange(newDateString);
           setDisplayDate(currentDate);
         }}
-        className={`aspect-square flex items-center justify-center text-xs rounded-lg ${
-          isSelected
-            ? "bg-cyan-500 text-white"
-            : "text-[#B2D8D8] hover:bg-cyan-500/20 hover:text-white"
-        }`}
+        className={`aspect-square flex items-center justify-center text-xs rounded-lg transition-all duration-200 ${isSelected
+          ? "bg-rainmap-accent2 text-rainmap-contrast shadow-[0_0_8px_rgba(0,255,120,0.3)]"
+          : "text-rainmap-muted hover:bg-rainmap-accent2/20 hover:text-rainmap-contrast"
+          }`}
       >
         {day}
       </button>
@@ -66,19 +65,25 @@ function Calendar({ activeDate, onDateChange }) {
   }
 
   return (
-    <div className="bg-[#024b58]/50 rounded-xl p-3 border border-white/10">
-      <div className="flex justify-between items-center mb-2">
-        <button onClick={() => setDisplayDate(new Date(year, month - 1, 1))}>
-          <ChevronLeft className="w-4 h-4 text-cyan-400" />
+    <div className="bg-rainmap-glass backdrop-blur-xl rounded-2xl p-4 border border-rainmap-glass-border">
+      <div className="flex justify-between items-center mb-3">
+        <button
+          onClick={() => setDisplayDate(new Date(year, month - 1, 1))}
+          className="p-1 rounded-lg hover:bg-rainmap-accent2/10 transition"
+        >
+          <ChevronLeft className="w-4 h-4 text-rainmap-accent2" />
         </button>
-        <div className="text-sm font-bold text-[#EAF6F6]">
+        <div className="text-sm font-bold text-rainmap-contrast">
           {displayDate.toLocaleString("es-ES", { month: "long" })} {year}
         </div>
-        <button onClick={() => setDisplayDate(new Date(year, month + 1, 1))}>
-          <ChevronRight className="w-4 h-4 text-cyan-400" />
+        <button
+          onClick={() => setDisplayDate(new Date(year, month + 1, 1))}
+          className="p-1 rounded-lg hover:bg-rainmap-accent2/10 transition"
+        >
+          <ChevronRight className="w-4 h-4 text-rainmap-accent2" />
         </button>
       </div>
-      <div className="grid grid-cols-7 gap-1 text-center text-[#B2D8D8] mb-1 text-[10px]">
+      <div className="grid grid-cols-7 gap-1 text-center text-rainmap-muted mb-2 text-[10px]">
         {daysOfWeek.map((d) => (
           <div key={d}>{d}</div>
         ))}
@@ -88,62 +93,81 @@ function Calendar({ activeDate, onDateChange }) {
   )
 }
 
-export default function DashboardSidebar({ view, setView, mainStormView, activeStorms, activeDate, onDateChange }) {
+export default function DashboardSidebar({ view, setView, mainStormView, activeStorms, activeDate, onDateChange, onNavigateHome }) {
   const severeStorms = activeStorms.filter((s) => (s.categoria || s.category || 0) >= 3).length
   const warningStorms = activeStorms.filter((s) => s.status === "warning" || s.estado === "warning").length
 
   return (
-    <aside className="h-full bg-gradient-to-b from-[#024b58] via-[#013f4e] to-[#002b36] flex flex-col border-l border-white/10 p-4 overflow-y-auto hide-scrollbar">
-      <div className="flex gap-2 mb-4 flex-shrink-0">
+    <aside className="h-full bg-rainmap-bg/80 backdrop-blur-2xl border-l border-rainmap-glass-border flex flex-col shadow-[0_0_30px_rgba(0,255,120,0.08)]">
+
+      {/* TOP SWITCH */}
+      <div className="sticky top-0 p-3 border-b border-rainmap-glass-border flex gap-2 backdrop-blur-2xl bg-rainmap-surface z-10 rounded-b-2xl">
+        {/* Home Button */}
         <button
-          onClick={() => setView("map")}
-          className={`flex-1 p-2 rounded-xl border ${
-            view === "map"
-              ? "bg-gradient-to-br from-cyan-500 to-teal-600 text-white border-cyan-300"
-              : "bg-[#024b58] text-slate-200 border-white/10"
-          }`}
+          onClick={onNavigateHome}
+          className="flex-1 p-2 rounded-xl border border-rainmap-accent2/30 bg-rainmap-accent2/15 text-rainmap-contrast text-sm tracking-wide transition-all duration-300 hover:bg-rainmap-accent2/25 hover:shadow-[0_0_15px_rgba(0,255,120,0.4)] backdrop-blur-xl flex items-center justify-center gap-2"
         >
-          <MapIcon className="w-4 h-4 inline mr-1" /> Mapa
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+          </svg>
+          Inicio
         </button>
+
+        {/* Active Storms Button - Shining to show it's active */}
         <button
-          onClick={() => setView("dashboard")}
-          className={`flex-1 p-2 rounded-xl border ${
-            view === "dashboard"
-              ? "bg-gradient-to-br from-cyan-500 to-teal-600 text-white border-cyan-300"
-              : "bg-[#024b58] text-slate-200 border-white/10"
-          }`}
+          className="flex-1 p-2 rounded-xl border border-rainmap-accent2 bg-rainmap-accent2/20 text-rainmap-contrast text-sm tracking-wide shadow-[0_0_10px_rgba(0,255,120,0.35)] backdrop-blur-xl flex items-center justify-center gap-2 cursor-default"
         >
-          <Wind className="w-4 h-4 inline mr-1" /> Tormentas
+          <span className="inline-block w-3 h-3 rounded-full border border-rainmap-accent2 mr-2"></span>
+          Tormentas
         </button>
       </div>
 
-      <div className="space-y-3 mb-6 flex-shrink-0">
-        <Stat label="Tormentas Activas" value={activeStorms.length} />
-        <Stat label="Tormentas Severas (Cat 3+)" value={severeStorms} />
-        <Stat label="Alertas" value={warningStorms} />
-      </div>
-
-      {/* CALENDARIO */}
-      <div className="mb-6 flex-shrink-0">
-        <Calendar 
-          activeDate={activeDate} 
-          onDateChange={onDateChange} 
-        />
-      </div>
-
-      {mainStormView && (
-        <div className="mb-6 flex-shrink-0">
-          <h3 className="text-sm font-bold text-[#EAF6F6] mb-3">Detalles de la Tormenta</h3>
-          <div className="space-y-2 text-[#EAF6F6] text-xs">
-            <p>Categoría {mainStormView.categoria || mainStormView.category || 'N/A'}</p>
-            <p>Viento: {mainStormView.velocidad_viento || mainStormView.windSpeed || 'N/A'} km/h</p>
-            <p>Presión: {mainStormView.presion || mainStormView.pressure || 'N/A'} mb</p>
-            {(mainStormView.direccion || mainStormView.direction) && (
-              <p>Movimiento: {mainStormView.direccion || mainStormView.direction} {mainStormView.velocidad_movimiento || mainStormView.movementSpeed || ''} km/h</p>
-            )}
-          </div>
+      {/* CONTENT */}
+      <div className="p-5 overflow-y-auto flex-1">
+        {/* STATS SECTION */}
+        <div className="space-y-3 mb-6">
+          <Stat label="Tormentas Activas" value={activeStorms.length} />
+          <Stat label="Tormentas Severas (Cat 3+)" value={severeStorms} />
+          <Stat label="Alertas" value={warningStorms} />
         </div>
-      )}
+
+        {/* STORM DETAILS */}
+        {mainStormView && (
+          <div className="mb-6">
+            <h3 className="text-center text-sm font-bold text-rainmap-contrast mb-3">Detalles de la Tormenta</h3>
+            <div className="bg-rainmap-glass backdrop-blur-xl rounded-2xl p-4 border border-rainmap-glass-border">
+              <div className="space-y-2 text-rainmap-contrast text-sm">
+                <div className="flex justify-between">
+                  <span className="text-rainmap-muted">Categoría:</span>
+                  <span className="font-semibold">{mainStormView.categoria || mainStormView.category || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-rainmap-muted">Viento:</span>
+                  <span className="font-semibold">{mainStormView.velocidad_viento || mainStormView.windSpeed || 'N/A'} km/h</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-rainmap-muted">Presión:</span>
+                  <span className="font-semibold">{mainStormView.presion || mainStormView.pressure || 'N/A'} mb</span>
+                </div>
+                {(mainStormView.direccion || mainStormView.direction) && (
+                  <div className="flex justify-between">
+                    <span className="text-rainmap-muted">Movimiento:</span>
+                    <span className="font-semibold">{mainStormView.direccion || mainStormView.direction} {mainStormView.velocidad_movimiento || mainStormView.movementSpeed || ''} km/h</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* CALENDARIO */}
+        <div className="mb-6">
+          <Calendar
+            activeDate={activeDate}
+            onDateChange={onDateChange}
+          />
+        </div>
+      </div>
     </aside>
   )
 }
