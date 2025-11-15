@@ -1,5 +1,4 @@
 import MapComponent from "../map-component/MapComponent";
-import { Menu } from "lucide-react";
 
 export default function RainmapContent({ selectedCity }) {
   return (

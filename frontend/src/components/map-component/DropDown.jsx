@@ -1,9 +1,8 @@
-// Dropdown.jsx
 import "./dropdown.css";
 
 export default function Dropdown() {
     return (
-        <div className="map-dropdown">
+        <div className="map-dropdown relative">
             <input type="checkbox" id="mapDropdown" className="dropdown-toggle" />
 
             {/* Button */}
@@ -13,7 +12,12 @@ export default function Dropdown() {
             </label>
 
             {/* Panel */}
-            <div className="dropdown-panel">
+            <div
+                className="
+                    dropdown-panel
+                    absolute bottom-16 left-4 z-40
+                "
+            >
                 <div className="glass-box">
                     {/* Color Section */}
                     <h3 className="section-title">Escala de Colores</h3>

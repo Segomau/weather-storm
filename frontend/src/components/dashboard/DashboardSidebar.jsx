@@ -1,5 +1,5 @@
-import React, { useState } from "react"
-import { MapPin, Wind, ChevronLeft, ChevronRight, MapIcon } from "lucide-react"
+import { useState } from "react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 
 function Stat({ label, value }) {
   return (
@@ -94,14 +94,12 @@ function Calendar({ activeDate, onDateChange }) {
 }
 
 export default function DashboardSidebar({
-  view,
-  setView,
   mainStormView,
   activeStorms,
   activeDate,
   onDateChange,
   onNavigateHome,
-  onToggleSidebar // Nueva prop
+  onToggleSidebar
 }) {
   const severeStorms = activeStorms.filter((s) => (s.categoria || s.category || 0) >= 3).length
   const warningStorms = activeStorms.filter((s) => s.status === "warning" || s.estado === "warning").length

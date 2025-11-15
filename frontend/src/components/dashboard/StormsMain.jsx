@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import DashboardSidebar from "./DashboardSidebar.jsx";
 import DashboardContent from "./DashboardContent.jsx";
 
@@ -74,15 +74,25 @@ export default function Storms({
                     onNavigateHome={onNavigateHome}
                     onToggleSidebar={() => setOpen(false)}
                 />
+
+
+                <button
+                    onClick={() => setOpen(false)}
+                    className="absolute top-4 right-4 md:hidden p-2 text-white"
+                >
+                    ✖
+                </button>
             </div>
 
             {/* --- OVERLAY --- */}
-            {open && (
-                <div
-                    className="fixed inset-0 bg-rainmap-bg/50 backdrop-blur-sm z-40 md:hidden"
-                    onClick={() => setOpen(false)}
-                />
-            )}
+            {
+                open && (
+                    <div
+                        className="fixed inset-0 bg-rainmap-bg/50 backdrop-blur-sm z-40 md:hidden"
+                        onClick={() => setOpen(false)}
+                    />
+                )
+            }
 
             {/* --- CONTENIDO PRINCIPAL CON MARGIN SUPERIOR --- */}
             <div className="flex-1 overflow-auto mt-16 md:mt-0">
