@@ -61,3 +61,4 @@ export default function RainmapContent({ selectedCity, onToggleSidebar }) {
     </main>
   );
 }
+
