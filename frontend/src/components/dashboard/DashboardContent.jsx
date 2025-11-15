@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react"
-import { MapPin, Wind, AlertTriangle, Loader, ChevronLeft, ChevronRight, Tornado } from "lucide-react"
+import { useState, useEffect } from "react"
+import { MapPin, Wind, AlertTriangle, Loader, ChevronLeft, ChevronRight } from "lucide-react"
 
 const API_BASE_URL = "http://localhost:8000"
 
@@ -10,9 +10,9 @@ function InfoPopup({ isOpen, onClose, title, content, isLoading, error }) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50" onClick={onClose}>
+    <div className="fixed inset-0 bg-rainmap-bg/70 flex items-center justify-center z-50" onClick={onClose}>
       <div
-        className="bg-rainmap-surface backdrop-blur-xl border border-rainmap-glass-border rounded-2xl p-6 w-[90%] max-w-lg shadow-[0_8px_30px_rgba(0,0,0,0.25)] relative"
+        className="bg-rainmap-surface backdrop-blur-xl border border-rainmap-glass-border rounded-2xl p-6 w-[90%] max-w-lg shadow-[0_8px_30px_rgba(10,10,12,0.25)] relative"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-xl font-bold text-rainmap-contrast mb-3">{title}</h2>
@@ -400,9 +400,9 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
   const [popupError, setPopupError] = useState(null)
 
   const getDangerLevelColor = (category) => {
-    if (category >= 4) return "bg-red-500"
-    if (category >= 2) return "bg-yellow-500"
-    return "bg-green-500"
+    if (category >= 4) return "bg-rainmap-danger"
+    if (category >= 2) return "bg-rainmap-accent2"
+    return "bg-rainmap-accent"
   }
 
   const closePopup = () => {
@@ -488,7 +488,7 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
               : "border-rainmap-glass-border hover:border-rainmap-accent2/30 shadow-lg hover:shadow-rainmap-accent2/15"
               }`}
           >
-            <div className="h-1 bg-gradient-to-r from-green-500/50 to-emerald-500/50" />
+            <div className="h-1 bg-gradient-to-r from-rainmap-accent/50 to-rainmap-accent2/50" />
             <div className="relative aspect-[4/3] flex items-center justify-center bg-rainmap-surface">
               {/* Preview de la imagen general */}
               <img
@@ -677,7 +677,7 @@ export default function DashboardContent({ mainStormView, setMainStormView, acti
             : "border-rainmap-glass-border hover:border-rainmap-accent2/30 shadow-lg hover:shadow-rainmap-accent2/15"
             }`}
         >
-          <div className="h-1 bg-gradient-to-r from-green-500/50 to-emerald-500/50" />
+          <div className="h-1 bg-gradient-to-r from-rainmap-accent/50 to-rainmap-accent2/50" />
           <div className="relative aspect-[4/3] flex items-center justify-center">
             {/* Preview de la imagen general */}
             <img

@@ -8,7 +8,7 @@ export default function Dropdown() {
 
             {/* Button */}
             <label htmlFor="mapDropdown" className="dropdown-face">
-                <span className="dropdown-text">Map Information</span>
+                <span className="dropdown-text">Detalles del Mapa</span>
                 <span className="dropdown-arrow"></span>
             </label>
 
@@ -16,35 +16,33 @@ export default function Dropdown() {
             <div className="dropdown-panel">
                 <div className="glass-box">
                     {/* Color Section */}
-                    <h3 className="section-title">Color Gradient Scale</h3>
+                    <h3 className="section-title">Escala de Colores</h3>
 
                     <ul className="color-list">
                         <li>
-                            <span className="bar bar-none" /> No rain
+                            <span className="bar bar-none" /> Sin Lluvia
                         </li>
                         <li>
-                            <span className="bar bar-low" /> Low intensity
+                            <span className="bar bar-low" /> Poca Lluvia
                         </li>
                         <li>
-                            <span className="bar bar-mid" /> Moderate intensity
+                            <span className="bar bar-mid" /> Lluvia Moderada
                         </li>
                         <li>
-                            <span className="bar bar-high" /> High intensity
+                            <span className="bar bar-high" /> Lluvia Intensa
                         </li>
                         <li>
-                            <span className="bar bar-vhigh" /> Very high intensity
+                            <span className="bar bar-vhigh" /> Lluvia de Alta Intensidad
                         </li>
                         <li>
-                            <span className="bar bar-extreme" /> Extreme intensity
+                            <span className="bar bar-extreme" /> Lluvia Extrema
                         </li>
                     </ul>
 
                     {/* Description */}
-                    <h3 className="section-title mt-4">Overview</h3>
+                    <h3 className="section-title mt-4">Descripción general</h3>
                     <p className="description text-white/90 text-sm leading-relaxed">
-                        This visualization represents real-time precipitation intensity.
-                        Violet tones indicate low levels, transitioning into orange and red
-                        as intensity increases.
+                        Esta visualización representa la intensidad de la precipitación en tiempo real. Los tonos violetas indican niveles bajos, pasando a naranja y rojo, a medida que aumenta la intensidad.
                     </p>
                 </div>
             </div>

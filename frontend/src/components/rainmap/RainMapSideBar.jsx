@@ -6,6 +6,8 @@ export default function RainmapSidebar({
   setSelectedCity,
   weatherData,
   setWeatherData,
+  onToggleSidebar,
+  onNavigateHome
 }) {
   const API_BASE_URL = "http://localhost:8000/rainmap"
 
@@ -47,6 +49,9 @@ export default function RainmapSidebar({
     setSearchQuery(city.name)
     setShowSuggestions(false)
 
+    // 🔥 CERRAR SIDEBAR EN MÓVIL
+    if (onToggleSidebar) onToggleSidebar()
+
     try {
       const res = await fetch(`${API_BASE_URL}/city?selectedCity=${city.name}`)
       if (!res.ok) throw new Error("Error fetching city data")
@@ -72,7 +77,7 @@ export default function RainmapSidebar({
     if (p === 0) return "border-rainmap-accent/40"
     if (p < 0.3) return "border-rainmap-mid/60"
     if (p < 0.6) return "border-rainmap-accent2/60"
-    if (p < 0.8) return "border-yellow-400/70"
+    if (p < 0.8) return "border-rainmap-accent2/70"
     return "border-rainmap-danger/80"
   }
 
@@ -81,14 +86,22 @@ export default function RainmapSidebar({
     : "border-rainmap-accent/40"
 
   return (
-    <aside className="h-full bg-rainmap-bg/80 backdrop-blur-2xl border-l border-rainmap-glass-border flex flex-col shadow-[0_0_30px_rgba(0,255,120,0.08)]">
+    <aside className="
+  h-full 
+  bg-rainmap-bg/80 
+  backdrop-blur-2xl 
+  border-l border-rainmap-glass-border 
+  flex flex-col 
+  shadow-[0_0_30px_rgba(41,121,255,0.08)]
+  relative
+">
 
-      {/* TOP SWITCH */}
+      {/* TOP SWITCH MEJORADO */}
       <div className="sticky top-0 p-3 border-b border-rainmap-glass-border flex gap-2 backdrop-blur-2xl bg-rainmap-surface z-10 rounded-b-2xl">
         {/* Home Button */}
         <button
-          onClick={() => window.location.href = "/"}
-          className="flex-1 p-2 rounded-xl border border-rainmap-accent2/30 bg-rainmap-accent2/15 text-rainmap-contrast text-sm tracking-wide transition-all duration-300 hover:bg-rainmap-accent2/25 hover:shadow-[0_0_15px_rgba(0,255,120,0.4)] backdrop-blur-xl flex items-center justify-center gap-2"
+          onClick={onNavigateHome}
+          className="flex-1 p-2 rounded-xl border border-rainmap-accent2/30 bg-rainmap-accent2/15 text-rainmap-contrast text-sm tracking-wide transition-all duration-300 hover:bg-rainmap-accent2/25 hover:shadow-[0_0_15px_rgba(0,240,255,0.4)] backdrop-blur-xl flex items-center justify-center gap-2"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -101,14 +114,27 @@ export default function RainmapSidebar({
           onClick={() => setView("map")}
           className={`flex-1 p-2 rounded-xl border text-sm tracking-wide transition-all duration-300
           ${view === "map"
-              ? "bg-rainmap-accent2/20 border-rainmap-accent2 text-rainmap-contrast shadow-[0_0_10px_rgba(0,255,120,0.35)] backdrop-blur-xl"
+              ? "bg-rainmap-accent2/20 border-rainmap-accent2 text-rainmap-contrast shadow-[0_0_10px_rgba(0,240,255,0.35)] backdrop-blur-xl"
               : "bg-rainmap-glass text-rainmap-muted border-rainmap-glass-border"}
           `}
         >
           <span className="inline-block w-3 h-3 rounded-full border border-rainmap-accent2 mr-2"></span>
           Mapa
         </button>
+
+        {/* Close Button - Solo en móvil */}
+        {onToggleSidebar && (
+          <button
+            onClick={onToggleSidebar}
+            className="md:hidden p-2 rounded-xl border border-rainmap-glass-border bg-rainmap-glass text-rainmap-contrast hover:bg-rainmap-accent2/20 transition-all duration-300 flex items-center justify-center"
+            aria-label="Cerrar sidebar"
+          >
+            ✕
+          </button>
+        )}
       </div>
+
+      {/* ELIMINADO: Botón de cerrar antiguo (absolute) */}
 
       {/* WEATHER + SEARCH */}
       <div className="p-5 overflow-y-auto flex-1" ref={searchRef}>
@@ -120,7 +146,7 @@ export default function RainmapSidebar({
 
             <div
               className={`p-4 rounded-2xl border ${weatherGlow}
-              bg-rainmap-glass backdrop-blur-2xl shadow-[0_0_25px_rgba(0,255,120,0.12)]`}
+              bg-rainmap-glass backdrop-blur-2xl shadow-[0_0_25px_rgba(0,240,255,0.12)]`}
             >
               <p className="text-5xl text-rainmap-accent mb-3">
                 {weatherData.precipitation === 0
@@ -160,7 +186,7 @@ export default function RainmapSidebar({
 
           {/* FILTERED SUGGESTIONS — appears when typing */}
           {showSuggestions && filteredCities.length > 0 && (
-            <div className="absolute top-full mt-1 w-full bg-rainmap-surface backdrop-blur-xl border border-rainmap-accent2/20 rounded-xl z-50 shadow-[0_0_20px_rgba(0,255,120,0.08)]">
+            <div className="absolute top-full mt-1 w-full bg-rainmap-surface backdrop-blur-xl border border-rainmap-accent2/20 rounded-xl z-50 shadow-[0_0_20px_rgba(0,240,255,0.08)]">
               {filteredCities.map((city, i) => (
                 <button
                   key={i}
@@ -181,7 +207,7 @@ export default function RainmapSidebar({
             <button
               key={c.name}
               onClick={() => handleCitySelect(c)}
-              className="p-3 rounded-xl bg-rainmap-glass backdrop-blur-xl border border-rainmap-accent2/10 hover:bg-rainmap-accent2/10 transition text-left shadow-[0_0_12px_rgba(0,255,120,0.05)]"
+              className="p-3 rounded-xl bg-rainmap-glass backdrop-blur-xl border border-rainmap-accent2/10 hover:bg-rainmap-accent2/10 transition text-left shadow-[0_0_12px_rgba(0,240,255,0.05)]"
             >
               <div className="flex justify-between items-center">
                 <div>

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Loader } from "lucide-react"
 import Dropdown from "./DropDown";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -198,8 +199,9 @@ export default function MapComponent({ selectedCity = "Ciudad de Mexico" }) {
             animate-pulse
           "
         >
-          <div className="text-rainmap.contrast text-sm">
-            🌧️ Cargando mapa de lluvia...
+          <div className="text-center">
+            <Loader className="w-12 h-12 text-rainmap-accent2 animate-spin mx-auto mb-4" />
+            <p className="text-rainmap-muted">Cargando datos del mapa...</p>
           </div>
         </div>
       )}

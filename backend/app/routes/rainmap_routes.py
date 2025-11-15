@@ -73,7 +73,7 @@ def fetch_point(p):
                 "longitude": p["lon"],
                 "current": "precipitation",
             },
-            timeout=15,
+            timeout=3000,
         )
         r.raise_for_status()
         d = r.json().get("current", {})
